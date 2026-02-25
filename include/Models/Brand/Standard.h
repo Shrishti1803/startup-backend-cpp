@@ -3,7 +3,7 @@
 #include <string>
 #include <optional>
 
-class BrandStandard {
+class Standard {
 private:
     int standard_id;
     std::optional<std::string> position;
@@ -13,9 +13,9 @@ private:
     std::optional<std::string> perception;
 
 public:
-    BrandStandard() = default;
+    Standard() = default;
 
-    BrandStandard(int id,
+    Standard(int id,
                   const std::optional<std::string>& pos = std::nullopt,
                   const std::optional<std::string>& identity = std::nullopt,
                   const std::optional<std::string>& c = std::nullopt,
