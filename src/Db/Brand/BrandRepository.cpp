@@ -64,7 +64,7 @@ Brand BrandRepository::getById(int brandId) {
 
         std::unique_ptr<sql::PreparedStatement> pstmt(
             conn->prepareStatement(
-                "SELECT brand_id, brand_name FROM BRAND WHERE brand_id = ?"
+                "SELECT brand_id, brand_name FROM BRAND WHERE brand_id = ? AND is_deleted = 0 "
             )
         );
 
@@ -105,7 +105,7 @@ std::vector<Brand> BrandRepository::getAll() {
 
         std::unique_ptr<sql::PreparedStatement> pstmt(
             conn->prepareStatement(
-                "SELECT brand_id, brand_name FROM BRAND"
+                "SELECT brand_id, brand_name FROM BRAND WHERE is_deleted = 0 "
             )
         );
 
@@ -128,9 +128,21 @@ std::vector<Brand> BrandRepository::getAll() {
 }
 
 
-void BrandRepository::updateName(int brandId, const std::string& newName) {
+void BrandRepository::updateName(int brandId, const std::optional<std::string>& newName) {
     auto db_logger = Logger::db();
+    if (!newName.has_value()) {
+        db_logger->warn("No update performed for brand ID {}: newName is empty", brandId);
+        return;
+    }
+
     db_logger->info("Updating brand ID {} with new name {}", brandId, newName);
+
+    if (!newName.has_value()) {
+        db_logger->warn("No update performed for brand ID {}: newName is empty", brandId);
+        return; // nothing to update
+    }
+
+
 
     try {
         sql::Connection* conn = dbManager.getConnection();
@@ -142,11 +154,11 @@ void BrandRepository::updateName(int brandId, const std::string& newName) {
 
         std::unique_ptr<sql::PreparedStatement> pstmt(
             conn->prepareStatement(
-                "UPDATE BRAND SET brand_name = ? WHERE brand_id = ?"
+                "UPDATE BRAND SET brand_name = ? WHERE brand_id = ? AND is_deleted = 0"
             )
         );
 
-        pstmt->setString(1, newName);
+        pstmt->setString(1, newName.value());
         pstmt->setInt(2, brandId);
 
         int rowsAffected = pstmt->executeUpdate();
@@ -165,9 +177,9 @@ void BrandRepository::updateName(int brandId, const std::string& newName) {
 }
 
 
-void BrandRepository::deleteById(int brandId) {
+void BrandRepository::softDelete(int brandId) {
     auto db_logger = Logger::db();
-    db_logger->info("Deleting brand with ID {}", brandId);
+    db_logger->info("SOft deleting brand with ID {}", brandId);
 
     try {
         sql::Connection* conn = dbManager.getConnection();
@@ -179,7 +191,7 @@ void BrandRepository::deleteById(int brandId) {
 
         std::unique_ptr<sql::PreparedStatement> pstmt(
             conn->prepareStatement(
-                "DELETE FROM BRAND WHERE brand_id = ?"
+                "UPDATE BRAND SET is_deleted = 1 WHERE brand_id = ? AND is_deleted = 0"
             )
         );
 

@@ -5,6 +5,7 @@
 #include <string>
 #include "../../Models/Brand/Brand.h"
 #include "DbManager.h"
+#include <optional>
 
 class BrandRepository {
 
@@ -22,8 +23,8 @@ public:
     std::vector<Brand> getAll();
 
     // ===== UPDATE =====
-    void updateName(int brandId, const std::string& newName);
+    void updateName(int brandId, const std::optional<std::string>& newName);
 
     // ===== DELETE =====
-    void deleteById(int brandId);
+    void softDelete(int brandId);
 };
