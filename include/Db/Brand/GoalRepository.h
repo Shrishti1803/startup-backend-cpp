@@ -20,6 +20,6 @@ public:
     void update(int goalId,
                 const std::optional<std::string>& description);
 
-    void deleteById(int goalId);
+    void softDelete(int goalId);
 
 };

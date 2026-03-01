@@ -60,7 +60,7 @@ std::vector<Goal> GoalRepository::getByBrandId(int brandId)
         std::unique_ptr<sql::PreparedStatement> pstmt(
             conn->prepareStatement(
                 "SELECT goal_id, brand_id, description "
-                "FROM GOALS WHERE brand_id = ?"
+                "FROM GOALS WHERE brand_id = ? AND is_deleted = 0"
             )
         );
 
@@ -93,28 +93,42 @@ std::vector<Goal> GoalRepository::getByBrandId(int brandId)
 
     return goals;
 }
+
+
 void GoalRepository::update(int goalId,
                             const std::optional<std::string>& description)
 {
     auto db_logger = Logger::db();
+
+    if (!description.has_value()) {
+        db_logger->warn("No update performed for goal_id {}: description is empty", goalId);
+        return;
+    }
+
     db_logger->info("Updating goal_id={}", goalId);
 
     try {
         auto conn = dbManager.getConnection();
+
         std::unique_ptr<sql::PreparedStatement> pstmt(
             conn->prepareStatement(
-                "UPDATE GOALS SET description = ? WHERE goal_id = ?"
+                "UPDATE GOALS "
+                "SET description = ? "
+                "WHERE goal_id = ? AND is_deleted = 0"
             )
         );
 
-        if (description.has_value())
-            pstmt->setString(1, description.value());
-        else
-            pstmt->setNull(1, sql::DataType::VARCHAR);
-
+        pstmt->setString(1, description.value());
         pstmt->setInt(2, goalId);
 
-        pstmt->executeUpdate();
+        int rowsAffected = pstmt->executeUpdate();
+
+        if (rowsAffected == 0) {
+            db_logger->warn("No goal found to update with ID {}", goalId);
+            throw std::runtime_error("Goal not found for update");
+        }
+
+        db_logger->info("Goal ID {} updated successfully", goalId);
     }
     catch (sql::SQLException& e) {
         db_logger->error("Goal update failed: {}", e.what());
@@ -122,21 +136,32 @@ void GoalRepository::update(int goalId,
     }
 }
 
-void GoalRepository::deleteById(int goalId)
+void GoalRepository::softDelete(int goalId)
 {
     auto db_logger = Logger::db();
-    db_logger->info("Deleting goal_id={}", goalId);
+    db_logger->info("Soft deleting goal_id={}", goalId);
 
     try {
         auto conn = dbManager.getConnection();
+
         std::unique_ptr<sql::PreparedStatement> pstmt(
             conn->prepareStatement(
-                "DELETE FROM GOALS WHERE goal_id = ?"
+                "UPDATE GOALS "
+                "SET is_deleted = 1 "
+                "WHERE goal_id = ? AND is_deleted = 0"
             )
         );
 
         pstmt->setInt(1, goalId);
-        pstmt->executeUpdate();
+
+        int rowsAffected = pstmt->executeUpdate();
+
+        if (rowsAffected == 0) {
+            db_logger->warn("No goal found to delete with ID {}", goalId);
+            throw std::runtime_error("Goal not found for deletion");
+        }
+
+        db_logger->info("Goal ID {} soft deleted successfully", goalId);
     }
     catch (sql::SQLException& e) {
         db_logger->error("Goal delete failed: {}", e.what());
