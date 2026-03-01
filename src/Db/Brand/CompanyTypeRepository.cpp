@@ -56,7 +56,7 @@ CompanyTypeRepository::getByBrandId(int brandId)
         std::unique_ptr<sql::PreparedStatement> pstmt(
             conn->prepareStatement(
                 "SELECT comp_type_id, brand_id, type "
-                "FROM COMPANY_TYPE WHERE brand_id = ?"
+                "FROM COMPANY_TYPE WHERE brand_id = ? AND is_deleted = 0"
             )
         );
 
@@ -83,61 +83,74 @@ CompanyTypeRepository::getByBrandId(int brandId)
     }
 }
 
-std::optional<CompanyType>
-CompanyTypeRepository::getByBrandId(int brandId)
+
+void CompanyTypeRepository::update(int brandId,
+                                   const std::optional<std::string>& newType)
 {
     auto db_logger = Logger::db();
-    db_logger->info("Fetching company type for brand_id={}", brandId);
+
+    if (!newType.has_value()) {
+        db_logger->warn("No update performed for brand_id {}: newType is empty", brandId);
+        return;
+    }
+
+    db_logger->info("Updating company type for brand_id={}", brandId);
 
     try {
         auto conn = dbManager.getConnection();
 
         std::unique_ptr<sql::PreparedStatement> pstmt(
             conn->prepareStatement(
-                "SELECT comp_type_id, brand_id, type "
-                "FROM COMPANY_TYPE WHERE brand_id = ?"
+                "UPDATE COMPANY_TYPE "
+                "SET type = ? "
+                "WHERE brand_id = ? AND is_deleted = 0"
+            )
+        );
+
+        pstmt->setString(1, newType.value());
+        pstmt->setInt(2, brandId);
+
+        int rowsAffected = pstmt->executeUpdate();
+
+        if (rowsAffected == 0) {
+            db_logger->warn("No company type found to update for brand_id {}", brandId);
+            throw std::runtime_error("CompanyType not found for update");
+        }
+
+        db_logger->info("CompanyType updated successfully for brand_id={}", brandId);
+    }
+    catch (sql::SQLException& e) {
+        db_logger->error("CompanyType update failed: {}", e.what());
+        throw;
+    }
+}
+
+void CompanyTypeRepository::softDelete(int brandId)
+{
+    auto db_logger = Logger::db();
+    db_logger->info("Soft deleting company type for brand_id={}", brandId);
+
+    try {
+        auto conn = dbManager.getConnection();
+
+        std::unique_ptr<sql::PreparedStatement> pstmt(
+            conn->prepareStatement(
+                "UPDATE COMPANY_TYPE "
+                "SET is_deleted = 1 "
+                "WHERE brand_id = ? AND is_deleted = 0"
             )
         );
 
         pstmt->setInt(1, brandId);
 
-        std::unique_ptr<sql::ResultSet> rs(
-            pstmt->executeQuery()
-        );
+        int rowsAffected = pstmt->executeUpdate();
 
-        if (rs->next()) {
-            CompanyType ct(
-                rs->getInt("comp_type_id"),
-                std::string(rs->getString("type"))
-            );
-
-            return ct;
+        if (rowsAffected == 0) {
+            db_logger->warn("No company type found to delete for brand_id {}", brandId);
+            throw std::runtime_error("CompanyType not found for deletion");
         }
 
-        return std::nullopt;
-    }
-    catch (sql::SQLException& e) {
-        db_logger->error("CompanyType fetch failed: {}", e.what());
-        throw;
-    }
-}
-
-void CompanyTypeRepository::deleteById(int id)
-{
-    auto db_logger = Logger::db();
-    db_logger->info("Deleting company type id={}", id);
-
-    try {
-        auto conn = dbManager.getConnection();
-
-        std::unique_ptr<sql::PreparedStatement> pstmt(
-            conn->prepareStatement(
-                "DELETE FROM COMPANY_TYPE WHERE comp_type_id = ?"
-            )
-        );
-
-        pstmt->setInt(1, id);
-        pstmt->executeUpdate();
+        db_logger->info("CompanyType soft deleted for brand_id={}", brandId);
     }
     catch (sql::SQLException& e) {
         db_logger->error("CompanyType delete failed: {}", e.what());

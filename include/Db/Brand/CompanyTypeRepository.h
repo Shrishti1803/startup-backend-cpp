@@ -19,8 +19,8 @@ public:
     std::optional<CompanyType> getByBrandId(int brandId);
 
     // UPDATE
-    void update(int brandId, const std::string& newType);
+    void update(int brandId, const std::optional<std::string>& newType);
 
     // DELETE
-    void deleteById(int brandId);
+    void softDelete(int brandId);
 };
