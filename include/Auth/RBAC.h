@@ -1,10 +1,19 @@
 //This will have the functions of all the Role based Access control feature 
 #pragma once
 
-#include <string>
-#include "AuthService.h" 
+#include "AuthService.h"   // for Session
 
-bool canCreateBrand(const Session& session);
-bool canUpdateBrand(const Session& session);
-bool canDeleteBrand(const Session& session);
-bool canViewBrand(const Session& session);
+
+class RBAC {
+
+public:
+
+    static bool canCreate(const Session& session);
+
+    static bool canUpdate(const Session& session);
+
+    static bool canDelete(const Session& session);
+
+    static bool canView(const Session& session);
+
+};

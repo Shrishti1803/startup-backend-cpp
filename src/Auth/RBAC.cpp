@@ -1,47 +1,32 @@
 #include "RBAC.h"
 
-// Everyone can create
-bool canCreate(const Session& session)
-{
-    if(session.role == "DBA" || 
-       session.role == "ADMIN" || 
-       session.role == "USER")
-        return true;
 
-    return false;
+bool RBAC::canCreate(const Session& session)
+{
+    return session.role == "DBA"
+        || session.role == "ADMIN"
+        || session.role == "USER";
 }
 
 
-// Everyone can update
-bool canUpdate(const Session& session)
+bool RBAC::canUpdate(const Session& session)
 {
-    if(session.role == "DBA" || 
-       session.role == "ADMIN" || 
-       session.role == "USER")
-        return true;
-
-    return false;
+    return session.role == "DBA"
+        || session.role == "ADMIN"
+        || session.role == "USER";
 }
 
 
-// Only DBA and ADMIN can delete
-bool canDelete(const Session& session)
+bool RBAC::canDelete(const Session& session)
 {
-    if(session.role == "DBA" || 
-       session.role == "ADMIN")
-        return true;
-
-    return false;
+    return session.role == "DBA"
+        || session.role == "ADMIN";
 }
 
 
-// Everyone can view
-bool canView(const Session& session)
+bool RBAC::canView(const Session& session)
 {
-    if(session.role == "DBA" || 
-       session.role == "ADMIN" || 
-       session.role == "USER")
-        return true;
-
-    return false;
+    return session.role == "DBA"
+        || session.role == "ADMIN"
+        || session.role == "USER";
 }
