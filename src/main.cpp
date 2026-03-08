@@ -1,35 +1,53 @@
-#include "Utils/Logger.h"
-#include<iostream>
-#include "Db/DbManager.h"
-#include "Auth/AuthService.h"
+#include <iostream>
 #include <sodium.h>
 
+#include "Utils/Logger.h"
+#include "Auth/AuthService.h"
+#include "AppContainer.h"
+
+// Models
+#include "Models/Brand/Brand.h"
+#include "Models/Brand/Goal.h"
+#include "Models/Brand/Competitor.h"
 
 int main() {
+
     if (sodium_init() < 0) {
+        std::cout << "Sodium init failed\n";
         return 1;
     }
 
     Logger::init();
-    auto app_logger = Logger::app();
-    app_logger->info("Application Started!");
+    auto logger = Logger::app();
 
-    DbManager DB;
-    
-    if(! DB.connect()){
-        app_logger->error("DB Connection failed, exiting application");
+    logger->info("Application Started");
+
+    AppContainer app;
+
+    if (!app.db.connect()) {
+        logger->error("DB connection failed");
         return 1;
     }
 
-    app_logger->info("DB connection verified in main");
+    logger->info("DB connected");
 
-    std::string email = "sample@email.com";
-    std::string pass = "samplePassword";
+    sql::Connection* conn = app.db.getConnection();
 
-    sql::Connection* conn  = DB.getConnection();
-    std::cout << Authentication(conn,email,pass);
+    std::string email = "pqr@gmail.com";
+    std::string password = "PQR@password";
 
-    app_logger->info("Closing the application");
+    auto session = Authentication(conn, email, password);
+
+    if (!session) {
+        logger->error("Authentication failed");
+        return 1;
+    }
+
+    logger->info("Login successful for {}", session->email);
+
+
+
+    logger->info("Application closing");
 
     return 0;
 }
