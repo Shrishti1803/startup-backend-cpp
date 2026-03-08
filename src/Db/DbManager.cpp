@@ -9,6 +9,10 @@
 #include <cppconn/prepared_statement.h>
 #include <cppconn/exception.h>
 
+//THIS file has all the necessary functions to eastablish the DB connection
+//ONLY THIS FILE WILL GIVE YOU THE ACCESS TO THE DB 
+//DO NOT DARE TO ASK FOR SEPARATE CONNECTIONS WHEN I HAVE LITERALLY MADE THESE HELPER FUNCTIONS
+//THIS IS THE SOUL OF THE DB CONNECTION DO NOT WASTE IT OR TAKE IT FOR GRANTED 
 
 bool DbManager::connect(){
 
@@ -16,9 +20,9 @@ bool DbManager::connect(){
     db_logger->info("Attempt to connect to database");
     try {
         sql::Driver* driver = get_driver_instance();
-        conn = driver->connect("IP", "root", "PASS");  
+        conn = driver->connect("tcp://127.0.0.1:3306", "root", "shrishti@2006");  
 
-        conn->setSchema("DB NAME"); 
+        conn->setSchema("SIMLIPAL"); 
 
 
         db_logger->info("Database connection successful");

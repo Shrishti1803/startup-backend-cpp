@@ -1,4 +1,4 @@
-#include "ActivityDetails.h"
+#include "Utils/ActivityDetails.h"
 
 #include <memory>
 #include <cppconn/prepared_statement.h>

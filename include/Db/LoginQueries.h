@@ -1,5 +1,4 @@
-#ifndef LOGIN_QUERIES_H
-#define LOGIN_QUERIES_H
+#pragma once
 #include <cppconn/resultset.h>
 #include <cppconn/statement.h>
 #include <cppconn/prepared_statement.h>
@@ -36,5 +35,3 @@ bool GetPasswordHash(sql::Connection* con, int user_id,
 
 
 bool LoginExistForUser(sql::Connection* con, int user_id);
-
-#endif

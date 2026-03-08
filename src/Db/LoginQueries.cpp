@@ -29,11 +29,9 @@ bool InsertLogin(sql::Connection* con,
 }
 
 
-/* this function check if the email entered is present in the ADMIN table
-if email not present -> user access denied
-if email present -> check if login_id is there or not.. If not there, then it is the 1st login...
-                 -> if login_id found in ADMIN <=> existing user logging in again
-
+/* 
+This function just checks if the entered email by the user is PRESENT in the ADMIN Table in the DB..
+Returns true and false accordingly
 */
 bool AdminQueryByEmail(sql::Connection* con, 
     const std::string& email,
@@ -68,7 +66,7 @@ bool AdminQueryByEmail(sql::Connection* con,
 }
 
 
-
+//This is a helper function. This is used to extract the HASHED PASSWORD from the LOGIN table so that the "authenticateExistingLogin() function in AuthService.cpp can use it to match the hash."
 bool GetPasswordHash(sql::Connection* con, int user_id,
     std::string& outHash){
         try{
@@ -99,8 +97,11 @@ bool GetPasswordHash(sql::Connection* con, int user_id,
 
 /*
 This function will check if login details are already existing in the LOGIN table
-if yes... Will return true 
-if no... will return false
+if yes... Will return true : case of existing Login.. so password only verified
+if no... will return false : case of new Login.. so password will be hashed and stored in the Table...
+But this is just the ineference.. 
+This function just checks if there are details in the LOGIN table or not 
+THAT'S IT !
 */
 bool LoginExistForUser(sql::Connection* con, int user_id){
     try{

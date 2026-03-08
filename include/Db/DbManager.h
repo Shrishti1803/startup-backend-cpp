@@ -9,6 +9,7 @@
 #include <mysql_connection.h>
 #include <cppconn/driver.h>
 
+//Declaration of all the functions required to establish a successful DB connection in the CLASS 
 class DbManager{
     public :
     DbManager();

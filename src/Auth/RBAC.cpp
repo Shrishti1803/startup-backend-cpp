@@ -1,4 +1,10 @@
-#include "RBAC.h"
+/*
+This layer is implemented according to the startup requirements 
+The CURD operation is constant for all the roles except DELETE not permitted for the "USER" role
+The Database has these implemented accordingly
+*/
+
+#include "Auth/RBAC.h"
 
 
 bool RBAC::canCreate(const Session& session)
