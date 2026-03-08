@@ -1,3 +1,12 @@
+/*
+This repository along with all the other repositories are reponsible for the 
+Db connection and implementing SQL queries of the CURD operations through Prepared statements 
+Soft delete and PATCH style update is constant in all the Repositores 
+
+The unique_ptr is for RAII implementation 
+makes sure there are no memory leaks 
+
+*/
 #include "Db/Brand/BrandRepository.h"
 #include "Utils/Logger.h"
 
@@ -6,7 +15,7 @@
 #include <cppconn/exception.h>
 
 BrandRepository::BrandRepository(DbManager& db)
-    : dbManager(db) {}
+    : dbManager(db) {} //Constructor call for Db Access
 
 int BrandRepository::insertBrand(const std::string& brandName) {
     auto db_logger = Logger::db();
@@ -28,7 +37,7 @@ int BrandRepository::insertBrand(const std::string& brandName) {
         pstmt->setString(1, brandName);
         pstmt->executeUpdate();
 
-        // Get generated ID
+        // Get generated ID so that it can be verified that data is inserted in the DB table
         std::unique_ptr<sql::PreparedStatement> idStmt(
             conn->prepareStatement("SELECT LAST_INSERT_ID()")
         );
@@ -65,6 +74,9 @@ Brand BrandRepository::getById(int brandId) {
         std::unique_ptr<sql::PreparedStatement> pstmt(
             conn->prepareStatement(
                 "SELECT brand_id, brand_name FROM BRAND WHERE brand_id = ? AND is_deleted = 0 "
+                //here is_deleted = 0 is used to check the records which have not been deleted 
+                //is_deleted is a column in every table which will be set to 1 when a user does Partial Delete
+                //so while accessing the data, is_deleted = 0 are the records that are not soft deleted
             )
         );
 
@@ -130,19 +142,17 @@ std::vector<Brand> BrandRepository::getAll() {
 
 void BrandRepository::updateName(int brandId, const std::optional<std::string>& newName) {
     auto db_logger = Logger::db();
+    //First it is checked if the column has any value. If it doesn't have any value then we simply don't update anything. 
     if (!newName.has_value()) {
         db_logger->warn("No update performed for brand ID {}: newName is empty", brandId);
         return;
     }
 
-    db_logger->info("Updating brand ID {} with new name {}", brandId, newName);
-
-    if (!newName.has_value()) {
-        db_logger->warn("No update performed for brand ID {}: newName is empty", brandId);
-        return; // nothing to update
-    }
-
-
+    db_logger->info(
+        "Updating brand ID {} with new name {}",
+        brandId,
+        newName.has_value() ? newName.value() : "NULL"
+    );
 
     try {
         sql::Connection* conn = dbManager.getConnection();
@@ -161,7 +171,7 @@ void BrandRepository::updateName(int brandId, const std::optional<std::string>& 
         pstmt->setString(1, newName.value());
         pstmt->setInt(2, brandId);
 
-        int rowsAffected = pstmt->executeUpdate();
+        int rowsAffected = pstmt->executeUpdate(); //Check if the data is updated 
 
         if (rowsAffected == 0) {
             db_logger->warn("No brand found to update with ID {}", brandId);
@@ -191,7 +201,7 @@ void BrandRepository::softDelete(int brandId) {
 
         std::unique_ptr<sql::PreparedStatement> pstmt(
             conn->prepareStatement(
-                "UPDATE BRAND SET is_deleted = 1 WHERE brand_id = ? AND is_deleted = 0"
+                "UPDATE BRAND SET is_deleted = 1 WHERE brand_id = ? AND is_deleted = 0" // we simply set is_deleted = 1 when we wanna delete a particular record 
             )
         );
 

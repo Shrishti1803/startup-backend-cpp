@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 #include "../../Models/Brand/Brand.h"
-#include "DbManager.h"
+#include "Db/DbManager.h"
 #include <optional>
 
 class BrandRepository {
