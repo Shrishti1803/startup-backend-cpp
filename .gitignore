@@ -3,6 +3,15 @@ app
 *.o
 *.out
 *.exe
+*.a
+*.so
+*.dylib
+
+# Build directories
+build/
+cmake-build*/
+CMakeFiles/
+CMakeCache.txt
 
 # Logs
 logs/
@@ -11,6 +20,13 @@ logs/
 # VS Code
 .vscode/
 
-# OS
+# OS files
 .DS_Store
 Thumbs.db
+
+# Temporary files
+*.tmp
+*.swp
+*~
+
+build/
