@@ -1,3 +1,23 @@
+/*
+ * Brand Domain Model
+ *
+ * Represents the core Brand entity in the system.
+ * This class models the complete in-memory structure of a brand and
+ * maintains relationships with all associated brand components.
+ *
+ * Relationships modeled in this class:
+ *  - 1:M  → Goals, Heads, Competitors, Revenues, News/Funding updates
+ *  - 1:1  → CompanyType, BrandStandard, Insights
+ *  - M:M  → Genres and Target Audience
+ *
+ * The Brand object is used as the root entity for constructing a
+ * BrandAggregate, allowing the system to create, update, and retrieve
+ * complete brand data across multiple database tables in a coordinated way.
+ *
+ * Note:
+ * This class only represents the domain structure and contains no
+ * database logic. Persistence is handled by repository classes.
+ */
 #pragma once
 
 #include <string>
@@ -33,7 +53,7 @@ private:
 
     //1:1 RELATIONS 
     std::optional<CompanyType> company_type;
-    std::optional<BrandStandard> brand_standard;
+    std::optional<Standard> brand_standard;
     std::optional<Insights> insights;
 
     //M:M RELATIONS 
@@ -91,7 +111,7 @@ private:
             company_type = type;
         }
 
-        void setBrandStandard(const BrandStandard& standard) {
+        void setBrandStandard(const Standard& standard) {
             brand_standard = standard;
         }
 
@@ -110,7 +130,7 @@ private:
         const std::vector<TargetAudience>& getTargetAudiences() const { return target_audiences; }
 
         const std::optional<CompanyType>& getCompanyType() const { return company_type; }
-        const std::optional<BrandStandard>& getBrandStandard() const { return brand_standard; }
+        const std::optional<Standard>& getBrandStandard() const { return brand_standard; }
         const std::optional<Insights>& getInsights() const { return insights; }
 
 

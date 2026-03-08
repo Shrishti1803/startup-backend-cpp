@@ -2,7 +2,7 @@
 
 #include <string>
 #include <optional>
-#include "Helpers/Date.h"
+#include "Models/Helpers/Date.h"
 
 class NewsFunding {
 private:
