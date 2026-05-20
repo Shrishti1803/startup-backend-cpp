@@ -1,0 +1,50 @@
+# Git
+.git
+.gitignore
+
+# Build Directories
+build/
+cmake-build*/
+CMakeFiles/
+
+# Build Output
+app
+*.exe
+*.o
+*.obj
+*.out
+
+
+# Logs
+logs/
+*.log
+
+
+# VS Code
+.vscode/
+
+
+# Python Cache
+__pycache__/
+*.pyc
+
+
+# Generated Analytics Files
+analytics.csv
+analytics_graph.png
+
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+
+# Temporary Files
+*.tmp
+*.swp
+*~
+
+simlipal_dump.sql
+
+# Environment Files
+.env
