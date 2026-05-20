@@ -22,7 +22,7 @@ bool InsertLogin(sql::Connection* con,
 
                 return (rows == 1);
             }
-            catch(const sql::SQLException){
+            catch(const sql::SQLException& e){
                 return false;
             }
 
@@ -121,6 +121,31 @@ bool LoginExistForUser(sql::Connection* con, int user_id){
     }
 
     catch(const sql::SQLException&){
+        return false;
+    }
+}
+
+bool UpdatePasswordHash(
+    sql::Connection* con,
+    int user_id,
+    const std::string& hashedPassword
+){
+    try{
+        std::unique_ptr<sql::PreparedStatement> pstmt(
+            con->prepareStatement(
+                "UPDATE LOGIN "
+                "SET password_hash = ? "
+                "WHERE user_id = ?"
+            )
+        );
+
+        pstmt->setString(1, hashedPassword);
+        pstmt->setInt(2, user_id);
+
+        return pstmt->executeUpdate() > 0;
+    }
+
+    catch(sql::SQLException& e){
         return false;
     }
 }

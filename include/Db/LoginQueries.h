@@ -35,3 +35,9 @@ bool GetPasswordHash(sql::Connection* con, int user_id,
 
 
 bool LoginExistForUser(sql::Connection* con, int user_id);
+
+bool UpdatePasswordHash(
+    sql::Connection* con,
+    int user_id,
+    const std::string& hashedPassword
+);
