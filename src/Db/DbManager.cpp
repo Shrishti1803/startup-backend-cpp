@@ -9,50 +9,109 @@
 #include <cppconn/prepared_statement.h>
 #include <cppconn/exception.h>
 
-//THIS file has all the necessary functions to eastablish the DB connection
-//ONLY THIS FILE WILL GIVE YOU THE ACCESS TO THE DB 
-//DO NOT DARE TO ASK FOR SEPARATE CONNECTIONS WHEN I HAVE LITERALLY MADE THESE HELPER FUNCTIONS
-//THIS IS THE SOUL OF THE DB CONNECTION DO NOT WASTE IT OR TAKE IT FOR GRANTED 
+#include <iostream>
+#include <stdexcept>
 
-bool DbManager::connect(){
+// THIS file has all the necessary functions to establish the DB connection
+// ONLY THIS FILE WILL GIVE YOU THE ACCESS TO THE DB
+// DO NOT DARE TO ASK FOR SEPARATE CONNECTIONS WHEN I HAVE LITERALLY MADE THESE HELPER FUNCTIONS
+// THIS IS THE SOUL OF THE DB CONNECTION DO NOT WASTE IT OR TAKE IT FOR GRANTED
 
+bool DbManager::connect()
+{
     auto db_logger = Logger::db();
-    db_logger->info("Attempt to connect to database");
-    try {
+
+    try
+    {
         sql::Driver* driver = get_driver_instance();
-        conn = driver->connect("tcp://127.0.0.1:3306", "root", "shrishti@2006");  
 
-        conn->setSchema("SIMLIPAL"); 
+        conn = driver->connect(
+            "Db Host server",
+            "root",
+            "Db Password"
+        );
 
+        conn->setSchema("Database name");
 
-        db_logger->info("Database connection successful");
+        if (db_logger)
+        {
+            db_logger->info(
+                "Connected to database schema: Database"
+            );
+        }
+
         return true;
-        //now when connection is established.... conn is updated to the required value 
-
-    } 
-
-    catch (sql::SQLException &e) {
-        db_logger->error("Database connection failed : {}", e.what());
+    }
+    catch (sql::SQLException& e)
+    {
         conn = nullptr;
-        //but if connection is not established.. conn is set to nullptr
-        
+
+        std::cerr
+            << "MySQL Error: "
+            << e.what()
+            << std::endl;
+
+        if (db_logger)
+        {
+            db_logger->critical(
+                "Database connection failed: {}",
+                e.what()
+            );
+        }
+
         return false;
     }
 }
 
-sql::Connection* DbManager::getConnection(){
-    return conn; //to make the required connection we call this function and this function will return the value of conn if the connection is successfully established 
+sql::Connection* DbManager::getConnection()
+{
+    return conn;
 }
 
-DbManager::DbManager() : conn(nullptr){}
-
-//Deconstructor :
-DbManager::~DbManager(){
-
+// Constructor
+DbManager::DbManager() : conn(nullptr)
+{
     auto db_logger = Logger::db();
-    if(conn){ // now if connection was successfully established... and since we using classes.. we also need to make the deconstructor if(conn) .. i.e if(true)
-        delete conn; //hence we delete the conn
-        conn = nullptr; // and assign nullptr to conn 
+
+    if (connect())
+    {
+        if (db_logger)
+        {
+            db_logger->info(
+                "DbManager initialized successfully."
+            );
+        }
     }
-    db_logger->info("Database connection closed");
+    else
+    {
+        if (db_logger)
+        {
+            db_logger->critical(
+                "DbManager failed to initialize."
+            );
+        }
+
+        throw std::runtime_error(
+            "Failed to connect to database"
+        );
+    }
+}
+
+// Destructor
+DbManager::~DbManager()
+{
+    auto db_logger = Logger::db();
+
+    if (conn)
+    {
+        delete conn;
+        conn = nullptr;
+    }
+
+    if (db_logger)
+    {
+        db_logger->info(
+            "Database connection closed"
+        );
+    }
 }
