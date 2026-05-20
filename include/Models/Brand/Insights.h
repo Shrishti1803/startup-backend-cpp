@@ -5,7 +5,7 @@
 
 class Insights {
 private:
-    int insights_id;
+    int insights_id=0;
     std::optional<std::string> pitch_angle;
     std::optional<std::string> leverage;
     std::optional<std::string> gap;
@@ -34,4 +34,14 @@ public:
     const std::optional<std::string>& getGap() const { return gap; }
 
     const std::optional<std::string>& getHook() const { return hook; }
+    
+    void setPitchAngle(const std::optional<std::string>& val) { pitch_angle = val; }
+
+    void setLeverage(const std::optional<std::string>& val) { leverage = val; }
+
+    void setGap(const std::optional<std::string>& val) { gap = val; }
+
+    void setHook(const std::optional<std::string>& val) { hook = val; }
+
+    void setId(int id) { insights_id = id; }
 };

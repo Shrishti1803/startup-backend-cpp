@@ -7,9 +7,9 @@
 #include "HeadContact.h"
 #include "Position.h"
 
-class Head {
+class BrandHead {
 private:
-    int head_id;
+    int head_id=0;
     Position position;
     std::string name;
     std::optional<std::string> linkedin_id;
@@ -19,9 +19,9 @@ private:
     std::vector<HeadContact> contacts;
 
 public:
-    Head() = default;
+    BrandHead() = default;
 
-    Head(int id,
+    BrandHead(int id,
          const Position& pos,
          const std::string& head_name,
          const std::string& personalMail,
@@ -57,7 +57,11 @@ public:
         return contacts;
     }
 
-    // ===== Modifiers =====
+    // ===== setters =====
+    void setId(int id){head_id = id;}
+
+    void setName(const std::string& n) { name = n; }
+
     void setPosition(const Position& pos) {
         position = pos;
     }
@@ -68,5 +72,15 @@ public:
 
     void addContact(const HeadContact& contact) {
         contacts.push_back(contact);
+    }
+
+    void setPersonalMail(const std::string& mail)
+    {
+        personal_mail = mail;
+    }
+
+    void setOfficialMail(const std::string& mail)
+    {
+        official_mail = mail;
     }
 };

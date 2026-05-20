@@ -6,7 +6,7 @@
 
 class NewsFunding {
 private:
-    int news_id;
+    int news_id=0;
     std::optional<std::string> event_type;
     std::optional<std::string> title;
     std::optional<std::string> description;
@@ -35,4 +35,14 @@ public:
     const std::optional<std::string>& getDescription() const { return description; }
 
     const std::optional<Date>& getDate() const { return event_date; }
+
+    void setId(int id) { news_id = id; }
+
+    void setEventType(const std::optional<std::string>& val) { event_type = val; }
+
+    void setTitle(const std::optional<std::string>& val) { title = val; }
+
+    void setDescription(const std::optional<std::string>& val) { description = val; }
+    
+    void setDate(const std::optional<Date>& val) { event_date = val; }
 };

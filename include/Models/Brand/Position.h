@@ -4,7 +4,7 @@
 
 class Position {
 private:
-    int position_id;
+    int position_id=0;
     std::string position_name;
 
 public:
@@ -21,6 +21,8 @@ public:
     }
 
     // Setter
+    void setId(int id) { position_id = id; }
+
     void setName(const std::string& name) {
         position_name = name;
     }

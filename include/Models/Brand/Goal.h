@@ -5,7 +5,7 @@
 
 class Goal {
 private:
-    int goal_id;
+    int goal_id = 0;
     std::optional<std::string> description;
 
 public:
@@ -23,6 +23,8 @@ public:
     }
 
     // Setter
+    void setId(int i){goal_id = i;}
+
     void setDescription(const std::optional<std::string>& desc) {
         description = desc;
     }

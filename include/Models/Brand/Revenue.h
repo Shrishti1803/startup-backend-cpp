@@ -5,7 +5,7 @@
 
 class Revenue {
 private:
-    int revenue_id;
+    int revenue_id=0;
     std::optional<int> financial_year;
     std::optional<std::string> revenue_period;
     std::optional<std::string> revenue_source;
@@ -44,4 +44,20 @@ public:
     const std::optional<std::string>& getType() const { return revenue_type; }
 
     const std::optional<std::string>& getCurrency() const { return currency; }
+
+    // ===== Setters =====
+
+void setId(int id) { revenue_id = id; }
+
+void setValue(double value) { revenue_value = value; }
+
+void setYear(const std::optional<int>& year) { financial_year = year; }
+
+void setPeriod(const std::optional<std::string>& period) { revenue_period = period; }
+
+void setSource(const std::optional<std::string>& source) { revenue_source = source; }
+
+void setType(const std::optional<std::string>& type) { revenue_type = type; }
+
+void setCurrency(const std::optional<std::string>& curr) { currency = curr; }
 };

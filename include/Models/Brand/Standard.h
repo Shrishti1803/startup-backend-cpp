@@ -5,7 +5,7 @@
 
 class Standard {
 private:
-    int standard_id;
+    int standard_id=0;
     std::optional<std::string> position;
     std::optional<std::string> brand_identity;
     std::optional<std::string> csr;
@@ -39,4 +39,16 @@ public:
     const std::optional<std::string>& getQuality() const { return quality; }
 
     const std::optional<std::string>& getPerception() const { return perception; }
+
+    void setId(int id) { standard_id = id; }
+
+    void setPosition(const std::optional<std::string>& val) { position = val; }
+
+    void setIdentity(const std::optional<std::string>& val) { brand_identity = val; }
+
+    void setCSR(const std::optional<std::string>& val) { csr = val; }
+
+    void setQuality(const std::optional<std::string>& val) { quality = val; }
+    
+    void setPerception(const std::optional<std::string>& val) { perception = val; }
 };

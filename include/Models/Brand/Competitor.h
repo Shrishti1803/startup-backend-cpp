@@ -5,7 +5,7 @@
 
 class Competitor {
 private:
-    int competitor_id;
+    int competitor_id=0;
     std::string name;
     std::optional<std::string> type;   // descriptive type
 
@@ -29,6 +29,8 @@ public:
     }
 
     // Setters
+    void setId(int id) { competitor_id = id; }
+
     void setName(const std::string& comp_name) {
         name = comp_name;
     }
