@@ -10,6 +10,7 @@ static std::shared_ptr<spdlog::logger> db_logger;
 
 //Logger init function (MUST BE CALLED IN THE MAIN.CPP FUNCTION !!!!!!!! OR ELSE A LOTTTT OF ERRORS)
 void Logger::init() {
+
     // common log format
     spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%n] [%^%l%$] %v");
     spdlog::set_level(spdlog::level::info);
@@ -22,6 +23,8 @@ void Logger::init() {
     app_logger->flush_on(spdlog::level::info);
     auth_logger->flush_on(spdlog::level::info);
     db_logger->flush_on(spdlog::level::info);
+    
+    spdlog::flush_every(std::chrono::seconds(1));
 
     app_logger->info("Application logger initialized");
 }
