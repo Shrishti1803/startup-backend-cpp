@@ -1,7 +1,7 @@
 /*This file is a class for the Transaction level work (commit & rollback)
 RAII application so that the "conn" pointer don't need to be constructed and deconstructed manually 
 The constructor and deconstructor would handle that automatically 
-This will prevent memory leaks*/
+This will prevent memory leaks */
 
 
 #pragma once
