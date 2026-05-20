@@ -4,7 +4,7 @@
 
 class TargetAudience {
 private:
-    int aud_id;
+    int aud_id=0;
     std::string aud_name;
 
 public:
@@ -20,5 +20,8 @@ public:
     // Setter
     void setName(const std::string& name) {
         aud_name = name;
+    }
+    void setId(int Id) {
+        aud_id = Id;
     }
 };
