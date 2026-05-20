@@ -14,18 +14,17 @@ InsightsRepository::InsightsRepository(DbManager& db)
     : dbManager(db) {}
 
 int InsightsRepository::insert(
-        int brandId,
-        const std::optional<std::string>& pitchAngle,
-        const std::optional<std::string>& leverage,
-        const std::optional<std::string>& gap,
-        const std::optional<std::string>& hook)
+    sql::Connection* conn,
+    int brandId,
+    const std::optional<std::string>& pitchAngle,
+    const std::optional<std::string>& leverage,
+    const std::optional<std::string>& gap,
+    const std::optional<std::string>& hook)
 {
     auto db_logger = Logger::db();
     db_logger->info("Inserting insights for brand_id={}", brandId);
 
     try {
-        auto conn = dbManager.getConnection();
-
         std::unique_ptr<sql::PreparedStatement> pstmt(
             conn->prepareStatement(
                 "INSERT INTO INSIGHTS "
@@ -123,51 +122,54 @@ InsightsRepository::getByBrandId(int brandId)
 }
 
 void InsightsRepository::update(
-        int insightsId,
-        const std::optional<std::string>& pitchAngle,
-        const std::optional<std::string>& leverage,
-        const std::optional<std::string>& gap,
-        const std::optional<std::string>& hook)
+    sql::Connection* conn,
+    int insightsId,
+    const std::optional<std::string>& pitchAngle,
+    const std::optional<std::string>& leverage,
+    const std::optional<std::string>& gap,
+    const std::optional<std::string>& hook)
 {
     auto db_logger = Logger::db();
     db_logger->info("Updating insights_id={}", insightsId);
 
-    if (!pitchAngle && !leverage && !gap && !hook) {
-        db_logger->warn("No fields provided for insights update id={}", insightsId);
-        return;
-    }
-
     try {
-        auto conn = dbManager.getConnection();
-
-        std::string query = "UPDATE INSIGHTS SET ";
-        std::vector<std::string> fields;
-
-        if (pitchAngle) fields.push_back("pitch_angle = ?");
-        if (leverage) fields.push_back("leverage = ?");
-        if (gap) fields.push_back("gap = ?");
-        if (hook) fields.push_back("hook = ?");
-
-        for (size_t i = 0; i < fields.size(); ++i) {
-            query += fields[i];
-            if (i < fields.size() - 1)
-                query += ", ";
-        }
-
-        query += " WHERE insights_id = ? AND is_deleted = 0";
 
         std::unique_ptr<sql::PreparedStatement> pstmt(
-            conn->prepareStatement(query)
+            conn->prepareStatement(
+                "UPDATE INSIGHTS SET "
+                "pitch_angle = ?, "
+                "leverage = ?, "
+                "gap = ?, "
+                "hook = ? "
+                "WHERE insights_id = ? AND is_deleted = 0"
+            )
         );
 
-        int index = 1;
+        // pitch_angle
+        if (pitchAngle.has_value())
+            pstmt->setString(1, pitchAngle.value());
+        else
+            pstmt->setNull(1, sql::DataType::VARCHAR);
 
-        if (pitchAngle) pstmt->setString(index++, pitchAngle.value());
-        if (leverage) pstmt->setString(index++, leverage.value());
-        if (gap) pstmt->setString(index++, gap.value());
-        if (hook) pstmt->setString(index++, hook.value());
+        // leverage
+        if (leverage.has_value())
+            pstmt->setString(2, leverage.value());
+        else
+            pstmt->setNull(2, sql::DataType::VARCHAR);
 
-        pstmt->setInt(index, insightsId);
+        // gap
+        if (gap.has_value())
+            pstmt->setString(3, gap.value());
+        else
+            pstmt->setNull(3, sql::DataType::VARCHAR);
+
+        // hook
+        if (hook.has_value())
+            pstmt->setString(4, hook.value());
+        else
+            pstmt->setNull(4, sql::DataType::VARCHAR);
+
+        pstmt->setInt(5, insightsId);
 
         int rows = pstmt->executeUpdate();
 
@@ -182,13 +184,14 @@ void InsightsRepository::update(
     }
 }
 
-void InsightsRepository::softDelete(int insightsId)
+void InsightsRepository::softDelete(
+    sql::Connection* conn,
+    int insightsId)
 {
     auto db_logger = Logger::db();
     db_logger->info("Soft deleting insights_id={}", insightsId);
 
     try {
-        auto conn = dbManager.getConnection();
 
         std::unique_ptr<sql::PreparedStatement> pstmt(
             conn->prepareStatement(

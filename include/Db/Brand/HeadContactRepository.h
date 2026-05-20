@@ -4,6 +4,7 @@
 #include <optional>
 #include "../../Models/Brand/HeadContact.h"
 #include "../DbManager.h"
+#include <cppconn/connection.h>
 
 class HeadContactRepository {
 private:
@@ -12,15 +13,19 @@ private:
 public:
     explicit HeadContactRepository(DbManager& db);
 
-    int insert(int headId,
+    int insert(sql::Connection* conn,
+               int headId,
                const std::optional<std::string>& contactType,
                const std::string& contactValue);
 
     std::vector<HeadContact> getByHeadId(int headId);
+    std::optional<HeadContact> getById(int contactId);
 
-    void update(int contactId,
+    void update(sql::Connection* conn,
+                int contactId,
                 const std::optional<std::string>& contactType,
-                const std::optional<std::string>& contactValue);    
-    void softDelete(int contactId);
+                const std::optional<std::string>& contactValue);
 
+    void softDelete(sql::Connection* conn,
+                    int contactId);
 };

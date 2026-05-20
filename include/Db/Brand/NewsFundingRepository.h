@@ -1,9 +1,11 @@
 #pragma once
 
 #include <vector>
+#include <optional>
 #include "../../Models/Brand/NewsFunding.h"
 #include "Models/Helpers/Date.h"
 #include "../DbManager.h"
+#include <cppconn/connection.h>
 
 class NewsFundingRepository {
 private:
@@ -12,20 +14,23 @@ private:
 public:
     explicit NewsFundingRepository(DbManager& db);
 
-    int insert(int brandId,
+    int insert(sql::Connection* conn,
+               int brandId,
                const std::optional<std::string>& eventType,
                const std::optional<std::string>& title,
                const std::optional<std::string>& description,
                const std::optional<Date>& eventDate);
 
     std::vector<NewsFunding> getByBrandId(int brandId);
+    std::optional<NewsFunding> getById(int newsFundingId);
 
-    void update(int newsId,
-            const std::optional<std::string>& eventType,
-            const std::optional<std::string>& title,
-            const std::optional<std::string>& description,
-            const std::optional<Date>& eventDate);
+    void update(sql::Connection* conn,
+                int newsId,
+                const std::optional<std::string>& eventType,
+                const std::optional<std::string>& title,
+                const std::optional<std::string>& description,
+                const std::optional<Date>& eventDate);
 
-    void softDelete(int newsId);
-
+    void softDelete(sql::Connection* conn,
+                    int newsId);
 };

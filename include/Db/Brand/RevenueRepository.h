@@ -1,8 +1,10 @@
 #pragma once
 
 #include <vector>
+#include <optional>
 #include "../../Models/Brand/Revenue.h"
 #include "../DbManager.h"
+#include <cppconn/connection.h>
 
 class RevenueRepository {
 private:
@@ -11,7 +13,8 @@ private:
 public:
     explicit RevenueRepository(DbManager& db);
 
-    int insert(int brandId,
+    int insert(sql::Connection* conn,
+               int brandId,
                int financialYear,
                const std::optional<std::string>& period,
                const std::optional<std::string>& source,
@@ -20,15 +23,17 @@ public:
                const std::optional<std::string>& currency);
 
     std::vector<Revenue> getByBrandId(int brandId);
+    std::optional<Revenue> getById(int id);
 
-    void update(int revenueId,
-            const std::optional<int>& financialYear,
-            const std::optional<std::string>& period,
-            const std::optional<std::string>& source,
-            const std::optional<std::string>& revenueType,
-            const std::optional<double>& value,
-            const std::optional<std::string>& currency);
+    void update(sql::Connection* conn,
+                int revenueId,
+                const std::optional<int>& financialYear,
+                const std::optional<std::string>& period,
+                const std::optional<std::string>& source,
+                const std::optional<std::string>& revenueType,
+                const std::optional<double>& value,
+                const std::optional<std::string>& currency);
 
-    void softDelete(int revenueId);
-
+    void softDelete(sql::Connection* conn,
+                    int revenueId);
 };

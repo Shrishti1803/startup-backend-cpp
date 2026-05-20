@@ -4,6 +4,7 @@
 #include <optional>
 #include "../../Models/Brand/Goal.h"
 #include "../DbManager.h"
+#include <cppconn/connection.h>
 
 class GoalRepository {
 private:
@@ -12,14 +13,17 @@ private:
 public:
     explicit GoalRepository(DbManager& db);
 
-    int insert(int brandId,
+    int insert(sql::Connection* conn,
+               int brandId,
                const std::optional<std::string>& description);
 
     std::vector<Goal> getByBrandId(int brandId);
+    std::optional<Goal> getById(int goalId);
 
-    void update(int goalId,
+    void update(sql::Connection* conn,
+                int goalId,
                 const std::optional<std::string>& description);
 
-    void softDelete(int goalId);
-
-};
+    void softDelete(sql::Connection* conn,
+                    int goalId);
+};      

@@ -8,14 +8,15 @@
 GoalRepository::GoalRepository(DbManager& db)
     : dbManager(db) {}
 
-int GoalRepository::insert(int brandId,
-                           const std::optional<std::string>& description)
+int GoalRepository::insert(
+    sql::Connection* conn,
+    int brandId,
+    const std::optional<std::string>& description)
 {
     auto db_logger = Logger::db();
     db_logger->info("Inserting goal for brand_id={}", brandId);
 
     try {
-        auto conn = dbManager.getConnection();
         std::unique_ptr<sql::PreparedStatement> pstmt(
             conn->prepareStatement(
                 "INSERT INTO GOALS (brand_id, description) VALUES (?, ?)"
@@ -95,8 +96,10 @@ std::vector<Goal> GoalRepository::getByBrandId(int brandId)
 }
 
 
-void GoalRepository::update(int goalId,
-                            const std::optional<std::string>& description)
+void GoalRepository::update(
+    sql::Connection* conn,
+    int goalId,
+    const std::optional<std::string>& description)
 {
     auto db_logger = Logger::db();
 
@@ -108,7 +111,6 @@ void GoalRepository::update(int goalId,
     db_logger->info("Updating goal_id={}", goalId);
 
     try {
-        auto conn = dbManager.getConnection();
 
         std::unique_ptr<sql::PreparedStatement> pstmt(
             conn->prepareStatement(
@@ -136,13 +138,14 @@ void GoalRepository::update(int goalId,
     }
 }
 
-void GoalRepository::softDelete(int goalId)
+void GoalRepository::softDelete(
+    sql::Connection* conn,
+    int goalId)
 {
     auto db_logger = Logger::db();
     db_logger->info("Soft deleting goal_id={}", goalId);
 
     try {
-        auto conn = dbManager.getConnection();
 
         std::unique_ptr<sql::PreparedStatement> pstmt(
             conn->prepareStatement(
@@ -165,6 +168,79 @@ void GoalRepository::softDelete(int goalId)
     }
     catch (sql::SQLException& e) {
         db_logger->error("Goal delete failed: {}", e.what());
+        throw;
+    }
+}
+std::optional<Goal>
+GoalRepository::getById(int goalId)
+{
+    auto db_logger = Logger::db();
+
+    db_logger->info(
+        "Fetching goal by id={}",
+        goalId
+    );
+
+    try
+    {
+        auto conn =
+            dbManager.getConnection();
+
+        std::unique_ptr<sql::PreparedStatement> pstmt(
+            conn->prepareStatement(
+                R"(
+                    SELECT
+                        goal_id,
+                        description
+                    FROM GOALS
+                    WHERE goal_id = ?
+                    AND is_deleted = 0
+                )"
+            )
+        );
+
+        pstmt->setInt(1, goalId);
+
+        std::unique_ptr<sql::ResultSet> res(
+            pstmt->executeQuery()
+        );
+
+        if(res->next())
+        {
+            std::optional<std::string>
+                description;
+
+            if(
+                !res->isNull(
+                    "description"
+                )
+            )
+            {
+                description =
+                    res->getString(
+                        "description"
+                    );
+            }
+
+            Goal g(
+                res->getInt(
+                    "goal_id"
+                ),
+                description
+            );
+
+            return g;
+        }
+
+        return std::nullopt;
+    }
+    catch(sql::SQLException& e)
+    {
+        db_logger->error(
+            "Goal getById failed: {}",
+            e.what()
+        );
+
         throw;
     }
 }

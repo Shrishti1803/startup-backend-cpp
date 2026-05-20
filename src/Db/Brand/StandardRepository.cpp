@@ -14,18 +14,18 @@ BrandStandardRepository::BrandStandardRepository(DbManager& db)
     : dbManager(db) {}
 
 int BrandStandardRepository::insert(
-        int brandId,
-        const std::optional<std::string>& position,
-        const std::optional<std::string>& identity,
-        const std::optional<std::string>& csr,
-        const std::optional<std::string>& quality,
-        const std::optional<std::string>& perception)
+    sql::Connection* conn,
+    int brandId,
+    const std::optional<std::string>& position,
+    const std::optional<std::string>& identity,
+    const std::optional<std::string>& csr,
+    const std::optional<std::string>& quality,
+    const std::optional<std::string>& perception)
 {
     auto db_logger = Logger::db();
     db_logger->info("Inserting standard for brand_id={}", brandId);
 
     try {
-        auto conn = dbManager.getConnection();
 
         std::unique_ptr<sql::PreparedStatement> pstmt(
             conn->prepareStatement(
@@ -131,54 +131,61 @@ BrandStandardRepository::getByBrandId(int brandId)
 }
 
 void BrandStandardRepository::update(
-        int standardId,
-        const std::optional<std::string>& position,
-        const std::optional<std::string>& identity,
-        const std::optional<std::string>& csr,
-        const std::optional<std::string>& quality,
-        const std::optional<std::string>& perception)
+    sql::Connection* conn,
+    int standardId,
+    const std::optional<std::string>& position,
+    const std::optional<std::string>& identity,
+    const std::optional<std::string>& csr,
+    const std::optional<std::string>& quality,
+    const std::optional<std::string>& perception)
 {
     auto db_logger = Logger::db();
     db_logger->info("Updating standard_id={}", standardId);
 
-    if (!position && !identity && !csr && !quality && !perception) {
-        db_logger->warn("No fields provided for standard update id={}", standardId);
-        return;
-    }
-
     try {
-        auto conn = dbManager.getConnection();
-
-        std::string query = "UPDATE BRAND_STANDARD SET ";
-        std::vector<std::string> fields;
-
-        if (position) fields.push_back("position = ?");
-        if (identity) fields.push_back("brand_identity = ?");
-        if (csr) fields.push_back("csr = ?");
-        if (quality) fields.push_back("quality = ?");
-        if (perception) fields.push_back("perception = ?");
-
-        for (size_t i = 0; i < fields.size(); ++i) {
-            query += fields[i];
-            if (i < fields.size() - 1)
-                query += ", ";
-        }
-
-        query += " WHERE standard_id = ? AND is_deleted = 0";
-
         std::unique_ptr<sql::PreparedStatement> pstmt(
-            conn->prepareStatement(query)
+            conn->prepareStatement(
+                "UPDATE BRAND_STANDARD SET "
+                "position = ?, "
+                "brand_identity = ?, "
+                "csr = ?, "
+                "quality = ?, "
+                "perception = ? "
+                "WHERE standard_id = ? AND is_deleted = 0"
+            )
         );
 
-        int index = 1;
+        // position
+        if (position.has_value())
+            pstmt->setString(1, position.value());
+        else
+            pstmt->setNull(1, sql::DataType::VARCHAR);
 
-        if (position) pstmt->setString(index++, position.value());
-        if (identity) pstmt->setString(index++, identity.value());
-        if (csr) pstmt->setString(index++, csr.value());
-        if (quality) pstmt->setString(index++, quality.value());
-        if (perception) pstmt->setString(index++, perception.value());
+        // identity
+        if (identity.has_value())
+            pstmt->setString(2, identity.value());
+        else
+            pstmt->setNull(2, sql::DataType::VARCHAR);
 
-        pstmt->setInt(index, standardId);
+        // csr
+        if (csr.has_value())
+            pstmt->setString(3, csr.value());
+        else
+            pstmt->setNull(3, sql::DataType::VARCHAR);
+
+        // quality
+        if (quality.has_value())
+            pstmt->setString(4, quality.value());
+        else
+            pstmt->setNull(4, sql::DataType::VARCHAR);
+
+        // perception
+        if (perception.has_value())
+            pstmt->setString(5, perception.value());
+        else
+            pstmt->setNull(5, sql::DataType::VARCHAR);
+
+        pstmt->setInt(6, standardId);
 
         int rows = pstmt->executeUpdate();
 
@@ -193,13 +200,14 @@ void BrandStandardRepository::update(
     }
 }
 
-void BrandStandardRepository::softDelete(int standardId)
+void BrandStandardRepository::softDelete(
+    sql::Connection* conn,
+    int standardId)
 {
     auto db_logger = Logger::db();
     db_logger->info("Soft deleting standard_id={}", standardId);
 
     try {
-        auto conn = dbManager.getConnection();
 
         std::unique_ptr<sql::PreparedStatement> pstmt(
             conn->prepareStatement(

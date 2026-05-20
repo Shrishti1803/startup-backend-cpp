@@ -1,8 +1,10 @@
 #pragma once
 
 #include <vector>
-#include "../../Models/Brand/Head.h"
+#include <optional>
+#include "../../Models/Brand/BrandHead.h"
 #include "../DbManager.h"
+#include <cppconn/connection.h>
 
 class HeadRepository {
 private:
@@ -11,24 +13,27 @@ private:
 public:
     explicit HeadRepository(DbManager& db);
 
-    int insert(int brandId,
+    int insert(sql::Connection* conn,
+               int brandId,
                int positionId,
                const std::string& name,
                const std::optional<std::string>& linkedinId,
                const std::string& personalMail,
                const std::string& officialMail);
 
-    std::vector<Head> getByBrandId(int brandId);
-
+    std::vector<BrandHead> getByBrandId(int brandId);
+    std::optional<BrandHead> getById(int headId);
 
     void update(
-    int headId,
-    const std::optional<int>& positionId,
-    const std::optional<std::string>& name,
-    const std::optional<std::string>& linkedinId,
-    const std::optional<std::string>& personalMail,
-    const std::optional<std::string>& officialMail);
+        sql::Connection* conn,
+        int headId,
+        const std::optional<int>& positionId,
+        const std::optional<std::string>& name,
+        const std::optional<std::string>& linkedinId,
+        const std::optional<std::string>& personalMail,
+        const std::optional<std::string>& officialMail
+    );
 
-    void softDelete(int headId);
-
+    void softDelete(sql::Connection* conn,
+                    int headId);
 };

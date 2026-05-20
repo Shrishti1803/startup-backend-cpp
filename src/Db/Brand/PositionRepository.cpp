@@ -13,7 +13,8 @@
 PositionRepository::PositionRepository(DbManager& db)
     : dbManager(db) {}
 
-int PositionRepository::insert(const std::string& positionName)
+int PositionRepository::insert(
+    const std::string& positionName)
 {
     auto db_logger = Logger::db();
     db_logger->info("Inserting position: {}", positionName);
@@ -120,7 +121,8 @@ PositionRepository::getById(int positionId)
     }
 }
 
-void PositionRepository::softDelete(int positionId)
+void PositionRepository::softDelete(
+    int positionId)
 {
     auto db_logger = Logger::db();
     db_logger->info("Soft deleting position_id={}", positionId);
@@ -150,3 +152,62 @@ void PositionRepository::softDelete(int positionId)
     }
 }
 
+
+void PositionRepository::update(
+    int positionId,
+    const std::optional<std::string>& name
+)
+{
+    auto db_logger = Logger::db();
+
+    db_logger->info(
+        "Updating position_id={}",
+        positionId
+    );
+
+    try {
+        auto conn = dbManager.getConnection();
+        std::unique_ptr<sql::PreparedStatement> pstmt(
+            conn->prepareStatement(
+                "UPDATE B_POSITION "
+                "SET position_name = ? "
+                "WHERE position_id = ? "
+                "AND is_deleted = 0"
+            )
+        );
+
+        pstmt->setString(
+            1,
+            name.value()
+        );
+
+        pstmt->setInt(
+            2,
+            positionId
+        );
+
+        int rows =
+            pstmt->executeUpdate();
+
+        if(rows == 0)
+        {
+            throw std::runtime_error(
+                "Position not found"
+            );
+        }
+
+        db_logger->info(
+            "Position {} updated",
+            positionId
+        );
+    }
+    catch(sql::SQLException& e)
+    {
+        db_logger->error(
+            "Position update failed: {}",
+            e.what()
+        );
+
+        throw;
+    }
+}

@@ -6,13 +6,12 @@
 #include <optional>
 
 #include <mysql_connection.h>
-
+#include <unordered_set>
 // Models
 #include "Models/Brand/Brand.h"
-#include "Models/Brand/CompanyType.h"
 #include "Models/Brand/Competitor.h"
 #include "Models/Brand/Goal.h"
-#include "Models/Brand/Head.h"
+#include "Models/Brand/BrandHead.h"
 #include "Models/Brand/Insights.h"
 #include "Models/Brand/NewsFunding.h"
 #include "Models/Brand/Position.h"
@@ -21,7 +20,6 @@
 
 // Repositories
 #include "Db/Brand/BrandRepository.h"
-#include "Db/Brand/CompanyTypeRepository.h"
 #include "Db/Brand/CompetitorRepository.h"
 #include "Db/Brand/GoalRepository.h"
 #include "Db/Brand/HeadRepository.h"
@@ -31,23 +29,46 @@
 #include "Db/Brand/PositionRepository.h"
 #include "Db/Brand/RevenueRepository.h"
 #include "Db/Brand/StandardRepository.h"
+#include "Db/Brand/PastInfluencerCampRepository.h"
+#include "Models/Brand/PastInfluencerCamp.h"
+
+//M:M repos
+#include "Db/Reference/Brand/BrandGenreRepository.h"
+#include "Db/Reference/Brand/GenreRepository.h"
+#include "Db/Reference/Brand/BrandTargetAudienceRepository.h"
+#include "Db/Reference/Brand/TargetAudienceRepository.h"
 
 
 
 struct BrandAggregate {
 
+    // Core
     Brand brand;
-    CompanyType companyType;
-    Revenue revenue;
-    Position position;
-    Standard standard;
-    Insights insights;
 
-    std::vector<Head> heads;
+    // Classification (UI early fields)
+    std::vector<Genre> genres;
+    std::vector<NewsFunding> newsFundings;
+    std::vector<TargetAudience> targetAudience;
+
+    // Campaigns
+    std::vector<PastInfluencerCamp> pastInfluencerCamps;
+
+    // Market context
     std::vector<Competitor> competitors;
     std::vector<Goal> goals;
-    std::vector<NewsFunding> newsFundings;
 
+    // Financial
+    std::vector<Revenue> revenue;
+
+    // Positioning
+    std::optional<Standard> standard;
+
+    // People
+    Position position;
+    std::vector<BrandHead> heads;
+
+    std::optional<Insights> insights;
+    std::unordered_set<std::string> clearFields;
 };
 
 
@@ -57,7 +78,6 @@ class BrandAggregateRepository {
 private:
 
     BrandRepository& brandRepo;
-    CompanyTypeRepository& companyTypeRepo;
     CompetitorRepository& competitorRepo;
     GoalRepository& goalRepo;
     HeadRepository& headRepo;
@@ -67,12 +87,17 @@ private:
     PositionRepository& positionRepo;
     RevenueRepository& revenueRepo;
     BrandStandardRepository& standardRepo;
+    GenreRepository& genreRepo;
+    TargetAudienceRepository& targetRepo;
+    BrandGenreRepository& brandGenreRepo;
+    BrandTargetAudienceRepository& brandTargetRepo;
+    PastInfluencerCampRepository& pastInfluencerRepo;
+
 
 public:
 
     BrandAggregateRepository(
         BrandRepository& brandRepo,
-        CompanyTypeRepository& companyTypeRepo,
         CompetitorRepository& competitorRepo,
         GoalRepository& goalRepo,
         HeadRepository& headRepo,
@@ -81,7 +106,12 @@ public:
         NewsFundingRepository& newsFundingRepo,
         PositionRepository& positionRepo,
         RevenueRepository& revenueRepo,
-        BrandStandardRepository& standardRepo
+        BrandStandardRepository& standardRepo,
+        GenreRepository& genRepo,
+        TargetAudienceRepository& targetRepo,
+        BrandGenreRepository& brandGenreRepo,
+        BrandTargetAudienceRepository& brandTargetRepo,
+        PastInfluencerCampRepository& pastInfluencerRepo
     );
 
 
@@ -112,6 +142,12 @@ public:
         sql::Connection* conn,
         int userId,
         int brandId
+    );
+    void deletePartial(
+        sql::Connection* conn,
+        int userId,
+        int brandId,
+        const BrandAggregate& data
     );
 
 };

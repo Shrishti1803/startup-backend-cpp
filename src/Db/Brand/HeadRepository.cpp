@@ -13,18 +13,19 @@
 HeadRepository::HeadRepository(DbManager& db)
     : dbManager(db) {}
 
-int HeadRepository::insert(int brandId,
-                           int positionId,
-                           const std::string& name,
-                           const std::optional<std::string>& linkedinId,
-                           const std::string& personalMail,
-                           const std::string& officialMail)
+int HeadRepository::insert(
+    sql::Connection* conn,
+    int brandId,
+    int positionId,
+    const std::string& name,
+    const std::optional<std::string>& linkedinId,
+    const std::string& personalMail,
+    const std::string& officialMail)
 {
     auto db_logger = Logger::db();
     db_logger->info("Inserting head for brand_id={}", brandId);
 
     try {
-        auto conn = dbManager.getConnection();
 
         std::unique_ptr<sql::PreparedStatement> pstmt(
             conn->prepareStatement(
@@ -64,12 +65,12 @@ int HeadRepository::insert(int brandId,
     }
 }
 
-std::vector<Head> HeadRepository::getByBrandId(int brandId)
+std::vector<BrandHead> HeadRepository::getByBrandId(int brandId)
 {
     auto db_logger = Logger::db();
     db_logger->info("Fetching heads for brand_id={}", brandId);
 
-    std::vector<Head> heads;
+    std::vector<BrandHead> heads;
 
     try {
         auto conn = dbManager.getConnection();
@@ -100,7 +101,7 @@ std::vector<Head> HeadRepository::getByBrandId(int brandId)
             if (!rs->isNull("linkedin_id"))
                 linkedin = std::string(rs->getString("linkedin_id"));
 
-            Head head(
+            BrandHead head(
                 rs->getInt("head_id"),
                 pos,
                 rs->getString("name"),
@@ -121,12 +122,13 @@ std::vector<Head> HeadRepository::getByBrandId(int brandId)
 }
 
 void HeadRepository::update(
-        int headId,
-        const std::optional<int>& positionId,
-        const std::optional<std::string>& name,
-        const std::optional<std::string>& linkedinId,
-        const std::optional<std::string>& personalMail,
-        const std::optional<std::string>& officialMail)
+    sql::Connection* conn,
+    int headId,
+    const std::optional<int>& positionId,
+    const std::optional<std::string>& name,
+    const std::optional<std::string>& linkedinId,
+    const std::optional<std::string>& personalMail,
+    const std::optional<std::string>& officialMail)
 {
     auto db_logger = Logger::db();
     db_logger->info("Updating head_id={}", headId);
@@ -137,7 +139,6 @@ void HeadRepository::update(
     }
 
     try {
-        auto conn = dbManager.getConnection();
 
         std::string query = "UPDATE HEADS SET ";
         std::vector<std::string> fields;
@@ -190,14 +191,14 @@ void HeadRepository::update(
     }
 }
 
-void HeadRepository::softDelete(int headId)
+void HeadRepository::softDelete(
+    sql::Connection* conn,
+    int headId)
 {
     auto db_logger = Logger::db();
     db_logger->info("Soft deleting head_id={}", headId);
 
     try {
-        auto conn = dbManager.getConnection();
-
         std::unique_ptr<sql::PreparedStatement> pstmt(
             conn->prepareStatement(
                 "UPDATE HEADS SET is_deleted = 1 "
@@ -216,6 +217,118 @@ void HeadRepository::softDelete(int headId)
     }
     catch (sql::SQLException& e) {
         db_logger->error("Head delete failed: {}", e.what());
+        throw;
+    }
+}
+
+std::optional<BrandHead>
+HeadRepository::getById(int headId)
+{
+    auto db_logger = Logger::db();
+
+    db_logger->info(
+        "Fetching head by id={}",
+        headId
+    );
+
+    try
+    {
+        auto conn =
+            dbManager.getConnection();
+
+        std::unique_ptr<sql::PreparedStatement> pstmt(
+            conn->prepareStatement(
+                R"(
+                    SELECT
+                        head_id,
+                        position_id,
+                        name,
+                        linkedin_id,
+                        personal_mail,
+                        official_mail
+                    FROM HEADS
+                    WHERE head_id = ?
+                    AND is_deleted = 0
+                )"
+            )
+        );
+
+        pstmt->setInt(1, headId);
+
+        std::unique_ptr<sql::ResultSet> res(
+            pstmt->executeQuery()
+        );
+
+        if(res->next())
+        {
+            BrandHead h;
+
+            h.setId(
+                res->getInt(
+                    "head_id"
+                )
+            );
+
+            Position position;
+
+            if(!res->isNull("position_id"))
+            {
+                position.setId(
+                    res->getInt(
+                        "position_id"
+                    )
+                );
+
+                h.setPosition(position);
+            }
+
+            h.setName(
+                std::string(
+                    res->getString(
+                        "name"
+                    )
+                )
+            );
+
+            if(!res->isNull("linkedin_id"))
+            {
+                h.setLinkedIn(
+                    std::string(
+                        res->getString(
+                            "linkedin_id"
+                        )
+                    )
+                );
+            }
+
+            h.setPersonalMail(
+                std::string(
+                    res->getString(
+                        "personal_mail"
+                    )
+                )
+            );
+
+            h.setOfficialMail(
+                std::string(
+                    res->getString(
+                        "official_mail"
+                    )
+                )
+            );
+
+            return h;
+        }
+
+        return std::nullopt;
+    }
+    catch(sql::SQLException& e)
+    {
+        db_logger->error(
+            "Head getById failed: {}",
+            e.what()
+        );
+
         throw;
     }
 }

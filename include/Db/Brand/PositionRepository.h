@@ -5,6 +5,7 @@
 #include <optional>
 #include "../../Models/Brand/Position.h"
 #include "../DbManager.h"
+#include <cppconn/connection.h>
 
 class PositionRepository {
 private:
@@ -19,5 +20,9 @@ public:
 
     std::optional<Position> getById(int positionId);
 
+    void update(
+        int positionId,
+        const std::optional<std::string>& name
+    );
     void softDelete(int positionId);
 };

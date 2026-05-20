@@ -14,17 +14,17 @@ NewsFundingRepository::NewsFundingRepository(DbManager& db)
     : dbManager(db) {}
 
 int NewsFundingRepository::insert(
-        int brandId,
-        const std::optional<std::string>& eventType,
-        const std::optional<std::string>& title,
-        const std::optional<std::string>& description,
-        const std::optional<Date>& eventDate)
+    sql::Connection* conn,
+    int brandId,
+    const std::optional<std::string>& eventType,
+    const std::optional<std::string>& title,
+    const std::optional<std::string>& description,
+    const std::optional<Date>& eventDate)
 {
     auto db_logger = Logger::db();
     db_logger->info("Inserting news/funding for brand_id={}", brandId);
 
     try {
-        auto conn = dbManager.getConnection();
 
         std::unique_ptr<sql::PreparedStatement> pstmt(
             conn->prepareStatement(
@@ -134,11 +134,12 @@ NewsFundingRepository::getByBrandId(int brandId)
 }
 
 void NewsFundingRepository::update(
-        int newsId,
-        const std::optional<std::string>& eventType,
-        const std::optional<std::string>& title,
-        const std::optional<std::string>& description,
-        const std::optional<Date>& eventDate)
+    sql::Connection* conn,
+    int newsId,
+    const std::optional<std::string>& eventType,
+    const std::optional<std::string>& title,
+    const std::optional<std::string>& description,
+    const std::optional<Date>& eventDate)
 {
     auto db_logger = Logger::db();
     db_logger->info("Updating news_id={}", newsId);
@@ -149,7 +150,6 @@ void NewsFundingRepository::update(
     }
 
     try {
-        auto conn = dbManager.getConnection();
 
         std::string query = "UPDATE NEWS_FUNDING SET ";
         std::vector<std::string> fields;
@@ -193,7 +193,9 @@ void NewsFundingRepository::update(
     }
 }
 
-void NewsFundingRepository::softDelete(int newsId)
+void NewsFundingRepository::softDelete(
+    [[maybe_unused]] sql::Connection* conn,
+    int newsId)
 {
     auto db_logger = Logger::db();
     db_logger->info("Soft deleting news_id={}", newsId);
@@ -219,6 +221,117 @@ void NewsFundingRepository::softDelete(int newsId)
     }
     catch (sql::SQLException& e) {
         db_logger->error("NewsFunding delete failed: {}", e.what());
+        throw;
+    }
+}
+
+std::optional<NewsFunding>
+NewsFundingRepository::getById(
+    int newsFundingId
+)
+{
+    auto db_logger = Logger::db();
+
+    db_logger->info(
+        "Fetching news funding by id={}",
+        newsFundingId
+    );
+
+    try
+    {
+        auto conn =
+            dbManager.getConnection();
+
+        std::unique_ptr<sql::PreparedStatement> pstmt(
+            conn->prepareStatement(
+                R"(
+                    SELECT
+                        news_id,
+                        event_type,
+                        title,
+                        description,
+                        event_date
+                    FROM NEWS_FUNDING
+                    WHERE news_id = ?
+                    AND is_deleted = 0
+                )"
+            )
+        );
+
+        pstmt->setInt(
+            1,
+            newsFundingId
+        );
+
+        std::unique_ptr<sql::ResultSet> res(
+            pstmt->executeQuery()
+        );
+
+        if(res->next())
+        {
+            std::optional<std::string>
+                eventType,
+                title,
+                description;
+
+            std::optional<Date> date;
+
+            if(!res->isNull("event_type"))
+            {
+                eventType =
+                    res->getString(
+                        "event_type"
+                    );
+            }
+
+            if(!res->isNull("title"))
+            {
+                title =
+                    res->getString(
+                        "title"
+                    );
+            }
+
+            if(!res->isNull("description"))
+            {
+                description =
+                    res->getString(
+                        "description"
+                    );
+            }
+
+            if(!res->isNull("event_date"))
+            {
+                date =
+                    Date::fromString(
+                        res->getString(
+                            "event_date"
+                        )
+                    );
+            }
+
+            NewsFunding n(
+                res->getInt(
+                    "news_id"
+                ),
+                eventType,
+                title,
+                description,
+                date
+            );
+
+            return n;
+        }
+
+        return std::nullopt;
+    }
+    catch(sql::SQLException& e)
+    {
+        db_logger->error(
+            "NewsFunding getById failed: {}",
+            e.what()
+        );
+
         throw;
     }
 }

@@ -9,15 +9,15 @@ CompetitorRepository::CompetitorRepository(DbManager& db)
     : dbManager(db) {}
 
 int CompetitorRepository::insert(
-        int brandId,
-        const std::string& name,
-        const std::optional<std::string>& type)
+    sql::Connection* conn,
+    int brandId,
+    const std::string& name,
+    const std::optional<std::string>& type)
 {
     auto db_logger = Logger::db();
     db_logger->info("Inserting competitor for brand_id={}", brandId);
 
     try {
-        auto conn = dbManager.getConnection();
 
         std::unique_ptr<sql::PreparedStatement> pstmt(
             conn->prepareStatement(
@@ -102,9 +102,10 @@ CompetitorRepository::getByBrandId(int brandId)
 }
 
 void CompetitorRepository::update(
-        int competitorId,
-        const std::optional<std::string>& name,
-        const std::optional<std::string>& type)
+    sql::Connection* conn,
+    int competitorId,
+    const std::optional<std::string>& name,
+    const std::optional<std::string>& type)
 {
     auto db_logger = Logger::db();
     db_logger->info("Updating competitor_id={}", competitorId);
@@ -115,7 +116,6 @@ void CompetitorRepository::update(
     }
 
     try {
-        auto conn = dbManager.getConnection();
 
         std::string query = "UPDATE COMPETITORS SET ";
         std::vector<std::string> fields;
@@ -163,14 +163,14 @@ void CompetitorRepository::update(
     }
 }
 
-void CompetitorRepository::softDelete(int competitorId)
+void CompetitorRepository::softDelete(
+    sql::Connection* conn,
+    int competitorId)
 {
     auto db_logger = Logger::db();
     db_logger->info("Soft deleting competitor_id={}", competitorId);
 
     try {
-        auto conn = dbManager.getConnection();
-
         std::unique_ptr<sql::PreparedStatement> pstmt(
             conn->prepareStatement(
                 "UPDATE COMPETITORS "
@@ -192,6 +192,84 @@ void CompetitorRepository::softDelete(int competitorId)
     }
     catch (sql::SQLException& e) {
         db_logger->error("Competitor delete failed: {}", e.what());
+        throw;
+    }
+}
+std::optional<Competitor>
+CompetitorRepository::getById(int competitorId)
+{
+    auto db_logger = Logger::db();
+
+    db_logger->info(
+        "Fetching competitor by id={}",
+        competitorId
+    );
+
+    try
+    {
+        auto conn =
+            dbManager.getConnection();
+
+        std::unique_ptr<sql::PreparedStatement> pstmt(
+            conn->prepareStatement(
+                R"(
+                    SELECT
+                        competitors_id,
+                        name,
+                        type
+                    FROM COMPETITORS
+                    WHERE competitors_id = ?
+                    AND is_deleted = 0
+                )"
+            )
+        );
+
+        pstmt->setInt(1, competitorId);
+
+        std::unique_ptr<sql::ResultSet> res(
+            pstmt->executeQuery()
+        );
+
+        if(res->next())
+        {
+            std::optional<std::string> type;
+
+            if(
+                !res->isNull(
+                    "type"
+                )
+            )
+            {
+                type =
+                    res->getString(
+                        "type"
+                    );
+            }
+
+            Competitor c(
+                res->getInt(
+                    "competitors_id"
+                ),
+
+                res->getString(
+                    "name"
+                ),
+
+                type
+            );
+
+            return c;
+        }
+
+        return std::nullopt;
+    }
+    catch(sql::SQLException& e)
+    {
+        db_logger->error(
+            "Competitor getById failed: {}",
+            e.what()
+        );
+
         throw;
     }
 }

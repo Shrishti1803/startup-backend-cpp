@@ -14,19 +14,19 @@ RevenueRepository::RevenueRepository(DbManager& db)
     : dbManager(db) {}
 
 int RevenueRepository::insert(
-        int brandId,
-        int financialYear,
-        const std::optional<std::string>& period,
-        const std::optional<std::string>& source,
-        const std::optional<std::string>& revenueType,
-        double value,
-        const std::optional<std::string>& currency)
+    sql::Connection* conn,
+    int brandId,
+    int financialYear,
+    const std::optional<std::string>& period,
+    const std::optional<std::string>& source,
+    const std::optional<std::string>& revenueType,
+    double value,
+    const std::optional<std::string>& currency)
 {
     auto db_logger = Logger::db();
     db_logger->info("Inserting revenue for brand_id={}", brandId);
 
     try {
-        auto conn = dbManager.getConnection();
 
         std::unique_ptr<sql::PreparedStatement> pstmt(
             conn->prepareStatement(
@@ -138,13 +138,14 @@ RevenueRepository::getByBrandId(int brandId)
 }
 
 void RevenueRepository::update(
-        int revenueId,
-        const std::optional<int>& financialYear,
-        const std::optional<std::string>& period,
-        const std::optional<std::string>& source,
-        const std::optional<std::string>& revenueType,
-        const std::optional<double>& value,
-        const std::optional<std::string>& currency)
+    sql::Connection* conn,
+    int revenueId,
+    const std::optional<int>& financialYear,
+    const std::optional<std::string>& period,
+    const std::optional<std::string>& source,
+    const std::optional<std::string>& revenueType,
+    const std::optional<double>& value,
+    const std::optional<std::string>& currency)
 {
     auto db_logger = Logger::db();
     db_logger->info("Updating revenue_id={}", revenueId);
@@ -157,7 +158,6 @@ void RevenueRepository::update(
     }
 
     try {
-        auto conn = dbManager.getConnection();
 
         std::string query = "UPDATE REVENUE SET ";
         std::vector<std::string> fields;
@@ -207,13 +207,14 @@ void RevenueRepository::update(
     }
 }
 
-void RevenueRepository::softDelete(int revenueId)
+void RevenueRepository::softDelete(
+    sql::Connection* conn,
+    int revenueId)
 {
     auto db_logger = Logger::db();
     db_logger->info("Soft deleting revenue_id={}", revenueId);
 
     try {
-        auto conn = dbManager.getConnection();
 
         std::unique_ptr<sql::PreparedStatement> pstmt(
             conn->prepareStatement(
@@ -233,6 +234,110 @@ void RevenueRepository::softDelete(int revenueId)
     }
     catch (sql::SQLException& e) {
         db_logger->error("Revenue delete failed: {}", e.what());
+        throw;
+    }
+}
+
+std::optional<Revenue>
+RevenueRepository::getById(int id)
+{
+    auto db_logger = Logger::db();
+
+    db_logger->info(
+        "Fetching revenue by id={}",
+        id
+    );
+
+    try
+    {
+        auto conn =
+            dbManager.getConnection();
+
+        std::unique_ptr<sql::PreparedStatement> stmt(
+            conn->prepareStatement(
+                R"(
+                    SELECT
+                        revenue_id,
+                        FinancialYear,
+                        revenue_period,
+                        RevenueSource,
+                        revenue_type,
+                        revenue_value,
+                        currency
+                    FROM REVENUE
+                    WHERE revenue_id = ?
+                    AND is_deleted = 0
+                )"
+            )
+        );
+
+        stmt->setInt(1, id);
+
+        std::unique_ptr<sql::ResultSet> res(
+            stmt->executeQuery()
+        );
+
+        if(res->next())
+        {
+            std::optional<int> year;
+            std::optional<std::string>
+                period,
+                source,
+                type,
+                currency;
+
+            if(!res->isNull("FinancialYear"))
+            {
+                year =
+                    res->getInt("FinancialYear");
+            }
+
+            if(!res->isNull("revenue_period"))
+            {
+                period =
+                    res->getString("revenue_period");
+            }
+
+            if(!res->isNull("RevenueSource"))
+            {
+                source =
+                    res->getString("RevenueSource");
+            }
+
+            if(!res->isNull("revenue_type"))
+            {
+                type =
+                    res->getString("revenue_type");
+            }
+
+            if(!res->isNull("currency"))
+            {
+                currency =
+                    res->getString("currency");
+            }
+
+            Revenue r(
+                res->getInt("revenue_id"),
+                res->getDouble("revenue_value"),
+                year,
+                period,
+                source,
+                type,
+                currency
+            );
+
+            return r;
+        }
+
+        return std::nullopt;
+    }
+    catch(sql::SQLException& e)
+    {
+        db_logger->error(
+            "Revenue getById failed: {}",
+            e.what()
+        );
+
         throw;
     }
 }

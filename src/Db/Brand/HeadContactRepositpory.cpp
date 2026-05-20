@@ -9,19 +9,18 @@ HeadContactRepository::HeadContactRepository(DbManager& db)
     : dbManager(db) {}
 
 int HeadContactRepository::insert(
-        int headId,
-        const std::optional<std::string>& contactType,
-        const std::string& contactValue)
+    sql::Connection* conn,
+    int headId,
+    const std::optional<std::string>& contactType,
+    const std::string& contactValue)
 {
     auto db_logger = Logger::db();
     db_logger->info("Inserting head contact for head_id={}", headId);
 
     try {
-        auto conn = dbManager.getConnection();
-
         std::unique_ptr<sql::PreparedStatement> pstmt(
             conn->prepareStatement(
-                "INSERT INTO HEAD_CONTACTS "
+                "INSERT INTO HEAD_CONTACT "
                 "(head_id, contact_type, contact_value) "
                 "VALUES (?, ?, ?)"
             )
@@ -68,7 +67,7 @@ HeadContactRepository::getByHeadId(int headId)
         std::unique_ptr<sql::PreparedStatement> pstmt(
             conn->prepareStatement(
                 "SELECT contacts_id, contact_type, contact_value "
-                "FROM HEAD_CONTACTS "
+                "FROM HEAD_CONTACT "
                 "WHERE head_id = ? AND is_deleted = 0"
             )
         );
@@ -102,17 +101,18 @@ HeadContactRepository::getByHeadId(int headId)
     return contacts;
 }
 
-void HeadContactRepository::softDelete(int contactId)
+void HeadContactRepository::softDelete(
+    sql::Connection* conn,
+    int contactId)
 {
     auto db_logger = Logger::db();
     db_logger->info("Soft deleting contact_id={}", contactId);
 
     try {
-        auto conn = dbManager.getConnection();
 
         std::unique_ptr<sql::PreparedStatement> pstmt(
             conn->prepareStatement(
-                "UPDATE HEAD_CONTACTS "
+                "UPDATE HEAD_CONTACT "
                 "SET is_deleted = 1 "
                 "WHERE contact_id = ? AND is_deleted = 0"
             )
@@ -135,24 +135,25 @@ void HeadContactRepository::softDelete(int contactId)
     }
 }
 
+
 void HeadContactRepository::update(
-        int contactId,
-        const std::optional<std::string>& contactType,
-        const std::optional<std::string>& contactValue)
+    sql::Connection* conn,
+    int contactId,
+    const std::optional<std::string>& contactType,
+    const std::optional<std::string>& contactValue)
 {
     auto db_logger = Logger::db();
     db_logger->info("Updating contact_id={}", contactId);
 
-    // 🚨 Guard: nothing to update
+   
     if (!contactType.has_value() && !contactValue.has_value()) {
         db_logger->warn("No fields provided to update for contact_id={}", contactId);
         return;
     }
 
     try {
-        auto conn = dbManager.getConnection();
 
-        std::string query = "UPDATE HEAD_CONTACTS SET ";
+        std::string query = "UPDATE HEAD_CONTACT SET ";
         std::vector<std::string> fields;
 
         if (contactType.has_value())
@@ -195,6 +196,90 @@ void HeadContactRepository::update(
     }
     catch (sql::SQLException& e) {
         db_logger->error("HeadContact update failed: {}", e.what());
+        throw;
+    }
+}
+
+std::optional<HeadContact>
+HeadContactRepository::getById(int contactId)
+{
+    auto db_logger = Logger::db();
+
+    db_logger->info(
+        "Fetching head contact by id={}",
+        contactId
+    );
+
+    try
+    {
+        auto conn =
+            dbManager.getConnection();
+
+        std::unique_ptr<sql::PreparedStatement> pstmt(
+            conn->prepareStatement(
+                R"(
+                    SELECT
+                        contact_id,
+                        contact_type,
+                        contact_value
+                    FROM HEAD_CONTACT
+                    WHERE contact_id = ?
+                    AND is_deleted = 0
+                )"
+            )
+        );
+
+        pstmt->setInt(1, contactId);
+
+        std::unique_ptr<sql::ResultSet> res(
+            pstmt->executeQuery()
+        );
+
+        if(res->next())
+        {
+            HeadContact c;
+
+            c.setId(
+                res->getInt(
+                    "contact_id"
+                )
+            );
+
+            if(
+                !res->isNull(
+                    "contact_type"
+                )
+            )
+            {
+                c.setType(
+                    std::string(
+                        res->getString(
+                            "contact_type"
+                        )
+                    )
+                );
+            }
+
+            c.setValue(
+                std::string(
+                    res->getString(
+                        "contact_value"
+                    )
+                )
+            );
+
+            return c;
+        }
+
+        return std::nullopt;
+    }
+    catch(sql::SQLException& e)
+    {
+        db_logger->error(
+            "HeadContact getById failed: {}",
+            e.what()
+        );
+
         throw;
     }
 }
