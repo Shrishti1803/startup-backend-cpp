@@ -1,53 +1,115 @@
 #include <iostream>
-#include <sodium.h>
-
+#include <exception>
 #include "Utils/Logger.h"
-#include "Auth/AuthService.h"
+
 #include "AppContainer.h"
+#include "CLI/Console.h"
 
-// Models
-#include "Models/Brand/Brand.h"
-#include "Models/Brand/Goal.h"
-#include "Models/Brand/Competitor.h"
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
-int main() {
+#ifdef _WIN32
+void maximizeConsoleWindow()
+{
+    HWND consoleWindow =
+        GetConsoleWindow();
 
-    if (sodium_init() < 0) {
-        std::cout << "Sodium init failed\n";
-        return 1;
+    ShowWindow(
+        consoleWindow,
+        SW_MAXIMIZE
+    );
+}
+#endif
+
+int main()
+{
+#ifdef _WIN32
+    maximizeConsoleWindow();
+#endif
+
+    try
+    {
+        Logger::init();
+
+        auto log = Logger::app();
+
+        if (log)
+            log->info("Application starting...");
+
+        AppContainer app;
+
+        if (log)
+            log->info("AppContainer initialized.");
+
+        // Database connection test
+        auto conn = app.db.getConnection();
+
+        if (!conn)
+        {
+            if (log)
+                log->critical("DbManager returned nullptr connection.");
+
+            std::cerr
+                << "Database connection failed.\n"
+                << "Check:\n"
+                << "1. MySQL service running\n"
+                << "2. DB username/password\n"
+                << "3. Schema name\n"
+                << "4. MySQL connector setup\n";
+
+            return 1;
+        }
+
+        if (log)
+            log->info("Database connected successfully.");
+
+        Console console(
+            app.db,
+            app.brandService,
+            app.creatorService,
+            app.dealService,
+            app.referencesService,
+            app.analyticsService
+        );
+
+        if (log)
+            log->info("Launching CLI...");
+
+        console.run();
     }
+    catch (const std::exception& ex)
+    {
+        std::cerr
+            << "Fatal Error: "
+            << ex.what()
+            << std::endl;
 
-    Logger::init();
-    auto logger = Logger::app();
+        auto log = Logger::app();
 
-    logger->info("Application Started");
-
-    AppContainer app;
-
-    if (!app.db.connect()) {
-        logger->error("DB connection failed");
-        return 1;
+        if (log)
+        {
+            log->critical(
+                "Fatal exception: {}",
+                ex.what()
+            );
+        }
     }
+    catch (...)
+    {
+        std::cerr
+            << "Unknown fatal error occurred."
+            << std::endl;
 
-    logger->info("DB connected");
+        auto log = Logger::app();
 
-    sql::Connection* conn = app.db.getConnection();
-
-    std::string email = "pqr@gmail.com";
-    std::string password = "PQR@password";
-
-    auto session = Authentication(conn, email, password);
-
-    if (!session) {
-        logger->error("Authentication failed");
-        return 1;
+        if (log)
+        {
+            log->critical(
+                "Unknown fatal exception occurred."
+            );
+        }
     }
-
-    logger->info("Login successful for {}", session->email);
-
-
-
-    logger->info("Application closing");
 
     return 0;
 }
