@@ -8,12 +8,12 @@ class RBAC {
 
 public:
 
-    static bool canCreate(const Session& session);
+    static bool canCreate(const Auth::Session& session);
 
-    static bool canUpdate(const Session& session);
+    static bool canUpdate(const Auth::Session& session);
 
-    static bool canDelete(const Session& session);
+    static bool canDelete(const Auth::Session& session);
 
-    static bool canView(const Session& session);
+    static bool canView(const Auth::Session& session);
 
 };

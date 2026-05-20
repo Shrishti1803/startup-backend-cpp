@@ -7,7 +7,7 @@ The Database has these implemented accordingly
 #include "Auth/RBAC.h"
 
 
-bool RBAC::canCreate(const Session& session)
+bool RBAC::canCreate(const Auth::Session& session)
 {
     return session.role == "DBA"
         || session.role == "ADMIN"
@@ -15,7 +15,7 @@ bool RBAC::canCreate(const Session& session)
 }
 
 
-bool RBAC::canUpdate(const Session& session)
+bool RBAC::canUpdate(const Auth::Session& session)
 {
     return session.role == "DBA"
         || session.role == "ADMIN"
@@ -23,14 +23,14 @@ bool RBAC::canUpdate(const Session& session)
 }
 
 
-bool RBAC::canDelete(const Session& session)
+bool RBAC::canDelete(const Auth::Session& session)
 {
     return session.role == "DBA"
         || session.role == "ADMIN";
 }
 
 
-bool RBAC::canView(const Session& session)
+bool RBAC::canView(const Auth::Session& session)
 {
     return session.role == "DBA"
         || session.role == "ADMIN"

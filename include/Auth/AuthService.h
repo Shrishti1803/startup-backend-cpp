@@ -1,10 +1,9 @@
-#ifndef AUTHSERVICE_H
-#define AUTHSERVICE_H
-
+#pragma once
 #include <string>
 #include <optional>
 #include <cppconn/connection.h>
 
+namespace Auth{
 //This Struct is used to store these details as the user enters 
 //SO THAT ROLE BASED ACCESS CONTROL CAN BE APPLIED TO THE FUNCTIONS THROUGHOUT THE APPLICATION
 struct Session{
@@ -29,7 +28,19 @@ bool authenticateExistingLogin(sql::Connection* con,
                                const std::string& password);
 
 
-                            
+bool resetPassword(
+    sql::Connection* con,
+    const std::string& email,
+    const std::string& newPassword
+);
 
+bool changePassword(
+    sql::Connection* con,
+    int user_id,
+    const std::string& currentPassword,
+    const std::string& newPassword
+);
+       
 
-#endif
+}
+                     
