@@ -8,5 +8,7 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-      - name: Verify CMake
-        run: cmake --version
+      - name: Configure CMake
+        run: cmake -B build
+      - name: Build Project
+        run: cmake --build build --config Release
