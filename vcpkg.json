@@ -1,0 +1,17 @@
+{
+    "name": "simplipal",
+    "version-string": "1.0.0",
+    "builtin-baseline": "HEAD",
+    "dependencies": [
+        "fmt",
+        "spdlog",
+        "jsoncpp",
+        "libsodium",
+        {
+            "name": "mysql-connector-cpp",
+            "features": [
+                "jdbc"
+            ]
+        }
+    ]
+}
