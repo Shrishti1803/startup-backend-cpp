@@ -13,13 +13,8 @@ add_definitions(
 # ---------- Include Directories ----------
 include_directories(
     ${PROJECT_SOURCE_DIR}/include
-    "${CMAKE_SOURCE_DIR}/mysql-connector-c++-9.7.0-winx64/include/jdbc"
 )
 
-# ---------- Library Directories ----------
-link_directories(
-    "${CMAKE_SOURCE_DIR}/mysql-connector-c++-9.7.0-winx64/lib64/vs14"
-)
 # ---------- Source Files ----------
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
     ${PROJECT_SOURCE_DIR}/src/*.cpp
@@ -33,6 +28,7 @@ find_package(fmt CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(jsoncpp CONFIG REQUIRED)
 find_package(unofficial-sodium CONFIG REQUIRED)
+find_package(unofficial-mysql-connector-cpp CONFIG REQUIRED)
 
 # ---------- Link Libraries ----------
 target_link_libraries(app PRIVATE
@@ -43,10 +39,8 @@ target_link_libraries(app PRIVATE
 
     ws2_32
     bcrypt
-
-    mysqlcppconn
-    libssl
-    libcrypto
+    unofficial::mysql-connector-cpp::connector
+    unofficial::mysql-connector-cpp::connector-jdbc
 )
 
 # ---------- Compiler Warnings ----------
