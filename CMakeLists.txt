@@ -5,51 +5,57 @@ project(Simplipal)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Optional if custom libs installed
-set(CMAKE_PREFIX_PATH "/usr/local")
+add_definitions(
+    -DNOMINMAX
+    -DWIN32_LEAN_AND_MEAN
+)
 
 # ---------- Include Directories ----------
 include_directories(
     ${PROJECT_SOURCE_DIR}/include
-    /usr/include/jsoncpp
+    "C:/mysql-connector-c++-9.7.0-winx64/include/jdbc"
 )
 
-# ---------- Collect Source Files ----------
+# ---------- Library Directories ----------
+link_directories(
+    "C:/mysql-connector-c++-9.7.0-winx64/lib64/vs14"
+)
+
+# ---------- Source Files ----------
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
     ${PROJECT_SOURCE_DIR}/src/*.cpp
 )
 
-# ---------- Create Executable ----------
+# ---------- Executable ----------
 add_executable(app ${SOURCES})
 
-# ---------- Find Packages ----------
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(JSONCPP REQUIRED jsoncpp)
-
-# ---------- Include JSONCPP ----------
-target_include_directories(app PRIVATE
-    ${JSONCPP_INCLUDE_DIRS}
-)
+# ---------- Packages ----------
+find_package(fmt CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
+find_package(jsoncpp CONFIG REQUIRED)
+find_package(unofficial-sodium CONFIG REQUIRED)
 
 # ---------- Link Libraries ----------
 target_link_libraries(app PRIVATE
-    ${JSONCPP_LIBRARIES}
+    fmt::fmt
+    spdlog::spdlog
+    JsonCpp::JsonCpp
+    unofficial-sodium::sodium
+
+    ws2_32
+    bcrypt
+
     mysqlcppconn
-    sodium
-    pthread
-    fmt
+    libssl
+    libcrypto
 )
 
 # ---------- Compiler Warnings ----------
-target_compile_options(app PRIVATE
-    -Wall
-    -Wextra
-    -Wpedantic
-    -Werror
-    -fdiagnostics-color=always
-)
+if(MSVC)
+    target_compile_options(app PRIVATE /W4)
+endif()
 
-# ---------- Output Binary ----------
+# ---------- Output ----------
 set_target_properties(app PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}
 )
