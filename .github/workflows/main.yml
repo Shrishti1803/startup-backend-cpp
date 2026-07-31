@@ -18,10 +18,10 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          .\vcpkg\vcpkg install fmt:x64-windows
-          .\vcpkg\vcpkg install spdlog:x64-windows
-          .\vcpkg\vcpkg install jsoncpp:x64-windows
-          .\vcpkg\vcpkg install libsodium:x64-windows
+          .\vcpkg\vcpkg install fmt:x64-windows-static
+          .\vcpkg\vcpkg install spdlog:x64-windows-static
+          .\vcpkg\vcpkg install jsoncpp:x64-windows-static
+          .\vcpkg\vcpkg install libsodium:x64-windows-static
           .\vcpkg\vcpkg install mysql-connector-cpp[jdbc]:x64-windows-static
 
       - name: List vcpkg MySQL files
