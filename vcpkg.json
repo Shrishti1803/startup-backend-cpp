@@ -1,7 +1,7 @@
 {
     "name": "simplipal",
     "version-string": "1.0.0",
-    "builtin-baseline": "HEAD",
+    "builtin-baseline": "a388a8d0feea262728029db601485c6b06c19f41",
     "dependencies": [
         "fmt",
         "spdlog",
