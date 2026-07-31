@@ -13,14 +13,13 @@ add_definitions(
 # ---------- Include Directories ----------
 include_directories(
     ${PROJECT_SOURCE_DIR}/include
-    "C:/mysql-connector-c++-9.7.0-winx64/include/jdbc"
+    "${CMAKE_SOURCE_DIR}/mysql-connector-c++-9.7.0-winx64/include/jdbc"
 )
 
 # ---------- Library Directories ----------
 link_directories(
-    "C:/mysql-connector-c++-9.7.0-winx64/lib64/vs14"
+    "${CMAKE_SOURCE_DIR}/mysql-connector-c++-9.7.0-winx64/lib64/vs14"
 )
-
 # ---------- Source Files ----------
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
     ${PROJECT_SOURCE_DIR}/src/*.cpp
