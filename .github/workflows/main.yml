@@ -22,7 +22,18 @@ jobs:
           .\vcpkg\vcpkg install spdlog:x64-windows
           .\vcpkg\vcpkg install jsoncpp:x64-windows
           .\vcpkg\vcpkg install libsodium:x64-windows
-          .\vcpkg\vcpkg install mysql-connector-cpp:x64-windows
+      - name: Download MySQL Connector
+        shell: powershell
+        run: |
+          Invoke-WebRequest `
+            -Uri "https://dev.mysql.com/get/Downloads/Connector-C++/mysql-connector-c++-9.7.0-winx64.zip" `
+            -OutFile mysql.zip
+
+          Expand-Archive mysql.zip -DestinationPath .
+      - name: List extracted files
+        shell: powershell
+        run: |
+          Get-ChildItem
 
       - name: Configure CMake
         run: |
