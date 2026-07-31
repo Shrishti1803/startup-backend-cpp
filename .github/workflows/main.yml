@@ -22,6 +22,7 @@ jobs:
           .\vcpkg\vcpkg install spdlog:x64-windows
           .\vcpkg\vcpkg install jsoncpp:x64-windows
           .\vcpkg\vcpkg install libsodium:x64-windows
+          .\vcpkg\vcpkg install mysql-connector-cpp:x64-windows
 
       - name: Configure CMake
         run: |
