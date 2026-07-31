@@ -24,6 +24,11 @@ jobs:
           .\vcpkg\vcpkg install libsodium:x64-windows
           .\vcpkg\vcpkg install mysql-connector-cpp[jdbc]:x64-windows-static
 
+      - name: List vcpkg MySQL files
+        shell: powershell
+        run: |
+          Get-ChildItem .\vcpkg\installed\x64-windows-static -Recurse | Where-Object { $_.FullName -match "mysql|cppconn" }
+
       - name: Configure CMake
         run: |
           cmake -B build `
