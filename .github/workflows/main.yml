@@ -8,14 +8,26 @@ jobs:
     runs-on: windows-latest
 
     steps:
+    
       - name: Checkout Repository
         uses: actions/checkout@v4
-
+    
       - name: Clone vcpkg
         run: |
           git clone https://github.com/microsoft/vcpkg.git
           .\vcpkg\bootstrap-vcpkg.bat
-
+    
+      - name: Restore vcpkg cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            vcpkg/installed
+            vcpkg/packages
+            vcpkg/downloads
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-
+    
       - name: Configure CMake
         shell: powershell
         run: |
@@ -23,7 +35,7 @@ jobs:
             -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake" `
             -DVCPKG_TARGET_TRIPLET=x64-windows-static `
             -DVCPKG_FEATURE_FLAGS=manifests
-
+    
       - name: Build
         run: |
           cmake --build build --config Release
