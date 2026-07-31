@@ -17,10 +17,11 @@ jobs:
           .\vcpkg\bootstrap-vcpkg.bat
 
       - name: Configure CMake
+        shell: powershell
         run: |
-          cmake -B build ^
-            -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake ^
-            -DVCPKG_TARGET_TRIPLET=x64-windows-static ^
+          cmake -B build `
+            -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake" `
+            -DVCPKG_TARGET_TRIPLET=x64-windows-static `
             -DVCPKG_FEATURE_FLAGS=manifests
 
       - name: Build
