@@ -16,23 +16,13 @@ jobs:
           git clone https://github.com/microsoft/vcpkg.git
           .\vcpkg\bootstrap-vcpkg.bat
 
-      - name: Install Dependencies
-        run: |
-          .\vcpkg\vcpkg install fmt:x64-windows-static
-          .\vcpkg\vcpkg install spdlog:x64-windows-static
-          .\vcpkg\vcpkg install jsoncpp:x64-windows-static
-          .\vcpkg\vcpkg install libsodium:x64-windows-static
-          .\vcpkg\vcpkg install mysql-connector-cpp[jdbc]:x64-windows-static
-
-      - name: List vcpkg MySQL files
-        shell: powershell
-        run: |
-          Get-ChildItem .\vcpkg\installed\x64-windows-static -Recurse | Where-Object { $_.FullName -match "mysql|cppconn" }
-
       - name: Configure CMake
         run: |
-          cmake -B build `
-            -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake `
-            -DVCPKG_TARGET_TRIPLET=x64-windows-static
+          cmake -B build ^
+            -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake ^
+            -DVCPKG_TARGET_TRIPLET=x64-windows-static ^
+            -DVCPKG_FEATURE_FLAGS=manifests
+
       - name: Build
-        run: cmake --build build --config Release
+        run: |
+          cmake --build build --config Release
