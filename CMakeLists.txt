@@ -29,6 +29,13 @@ find_package(spdlog CONFIG REQUIRED)
 find_package(jsoncpp CONFIG REQUIRED)
 find_package(unofficial-sodium CONFIG REQUIRED)
 find_package(unofficial-mysql-connector-cpp CONFIG REQUIRED)
+get_target_property(
+    MYSQL_INCLUDE_DIRS
+    unofficial::mysql-connector-cpp::connector-jdbc
+    INTERFACE_INCLUDE_DIRECTORIES
+)
+
+message(STATUS "MYSQL_INCLUDE_DIRS=${MYSQL_INCLUDE_DIRS}")
 get_target_property(MYSQL_INCLUDES unofficial::mysql-connector-cpp::connector-jdbc INTERFACE_INCLUDE_DIRECTORIES)
 message(STATUS "MYSQL_INCLUDES=${MYSQL_INCLUDES}")
 
