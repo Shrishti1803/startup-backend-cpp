@@ -119,24 +119,28 @@ jobs:
         if: runner.os == 'Windows'
         shell: powershell
         run: |
-          New-Item -ItemType Directory -Force -Path release
-
-          Copy-Item "Release\app.exe" "release\"
+          $files = @("Release\app.exe")
 
           if (Test-Path "README.md") {
-            Copy-Item "README.md" "release\"
+            $files += "README.md"
           }
 
           if (Test-Path "LICENSE") {
-            Copy-Item "LICENSE" "release\"
+            $files += "LICENSE"
           }
 
           if (Test-Path "config") {
-            Copy-Item "config" "release\" -Recurse
+            $files += "config"
           }
 
-          Compress-Archive -Path release\* -DestinationPath Simplipal-Windows.zip -Force
+          if (Test-Path "Simplipal-Windows.zip") {
+            Remove-Item "Simplipal-Windows.zip" -Force
+          }
 
+          Compress-Archive `
+            -Path $files `
+            -DestinationPath "Simplipal-Windows.zip"
+            
       # ==========================
       # Upload Windows Artifact
       # ==========================
