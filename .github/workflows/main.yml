@@ -79,7 +79,7 @@ jobs:
       - name: Build (Linux)
         if: runner.os == 'Linux'
         run: |
-          cmake --build build -j$(nproc)
+          cmake --build build --parallel
 
       # ==========================
       # Build (Windows)
