@@ -7,13 +7,17 @@ endif()
 
 project(Simplipal)
 
+# ---------- C++ Standard ----------
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_definitions(
-    -DNOMINMAX
-    -DWIN32_LEAN_AND_MEAN
-)
+# ---------- Windows Definitions ----------
+if(WIN32)
+    add_definitions(
+        -DNOMINMAX
+        -DWIN32_LEAN_AND_MEAN
+    )
+endif()
 
 # ---------- Include Directories ----------
 include_directories(
@@ -27,6 +31,7 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
 
 # ---------- MSVC Runtime ----------
 if(MSVC)
+    # Match the static runtime used by vcpkg (x64-windows-static)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
@@ -40,26 +45,22 @@ find_package(jsoncpp CONFIG REQUIRED)
 find_package(unofficial-sodium CONFIG REQUIRED)
 find_package(unofficial-mysql-connector-cpp CONFIG REQUIRED)
 
-get_target_property(
-    MYSQL_INCLUDE_DIRS
-    unofficial::mysql-connector-cpp::connector-jdbc
-    INTERFACE_INCLUDE_DIRECTORIES
-)
+# ---------- Windows-only MySQL JDBC Include ----------
+if(WIN32)
 
-message(STATUS "MYSQL_INCLUDE_DIRS=${MYSQL_INCLUDE_DIRS}")
+    get_target_property(
+        MYSQL_INCLUDE_DIRS
+        unofficial::mysql-connector-cpp::connector-jdbc
+        INTERFACE_INCLUDE_DIRECTORIES
+    )
 
-get_target_property(
-    MYSQL_INCLUDES
-    unofficial::mysql-connector-cpp::connector-jdbc
-    INTERFACE_INCLUDE_DIRECTORIES
-)
+    message(STATUS "MYSQL_INCLUDE_DIRS=${MYSQL_INCLUDE_DIRS}")
 
-message(STATUS "MYSQL_INCLUDES=${MYSQL_INCLUDES}")
+    target_include_directories(app PRIVATE
+        "${MYSQL_INCLUDE_DIRS}/jdbc"
+    )
 
-# ---------- MySQL JDBC Include Directory ----------
-target_include_directories(app PRIVATE
-    "${MYSQL_INCLUDE_DIRS}/jdbc"
-)
+endif()
 
 # ---------- Link Libraries ----------
 target_link_libraries(app PRIVATE
@@ -67,12 +68,17 @@ target_link_libraries(app PRIVATE
     spdlog::spdlog
     JsonCpp::JsonCpp
     unofficial-sodium::sodium
-
-    ws2_32
-    bcrypt
     unofficial::mysql-connector-cpp::connector
     unofficial::mysql-connector-cpp::connector-jdbc
 )
+
+# ---------- Windows System Libraries ----------
+if(WIN32)
+    target_link_libraries(app PRIVATE
+        ws2_32
+        bcrypt
+    )
+endif()
 
 # ---------- Compiler Warnings ----------
 if(MSVC)
