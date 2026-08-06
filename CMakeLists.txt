@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
 
+# Allow CMAKE_MSVC_RUNTIME_LIBRARY to control the MSVC runtime
+if(POLICY CMP0091)
+    cmake_policy(SET CMP0091 NEW)
+endif()
+
 project(Simplipal)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -19,6 +24,11 @@ include_directories(
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
     ${PROJECT_SOURCE_DIR}/src/*.cpp
 )
+
+# ---------- MSVC Runtime ----------
+if(MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
 
 # ---------- Executable ----------
 add_executable(app ${SOURCES})
