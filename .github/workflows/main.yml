@@ -121,7 +121,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path release
 
-          Copy-Item "app.exe" "release\"
+          Copy-Item "Release\app.exe" "release\"
 
           if (Test-Path "README.md") {
             Copy-Item "README.md" "release\"
