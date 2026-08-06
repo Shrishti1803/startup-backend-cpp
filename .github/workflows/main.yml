@@ -82,9 +82,67 @@ jobs:
           cmake --build build --parallel
 
       # ==========================
+      # Package (Linux)
+      # ==========================
+      - name: Package (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p release
+          cp build/app release/
+          cp README.md release/ || true
+          cp LICENSE release/ || true
+          if [ -d config ]; then cp -r config release/; fi
+          tar -czf Simplipal-Linux.tar.gz -C release .
+
+      # ==========================
+      # Upload Linux Artifact
+      # ==========================
+      - name: Upload Linux Artifact
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Simplipal-Linux
+          path: Simplipal-Linux.tar.gz
+
+      # ==========================
       # Build (Windows)
       # ==========================
       - name: Build (Windows)
         if: runner.os == 'Windows'
         run: |
           cmake --build build --config Release
+
+      # ==========================
+      # Package (Windows)
+      # ==========================
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force -Path release
+
+          Copy-Item "build\Release\app.exe" "release\"
+
+          if (Test-Path "README.md") {
+            Copy-Item "README.md" "release\"
+          }
+
+          if (Test-Path "LICENSE") {
+            Copy-Item "LICENSE" "release\"
+          }
+
+          if (Test-Path "config") {
+            Copy-Item "config" "release\" -Recurse
+          }
+
+          Compress-Archive -Path release\* -DestinationPath Simplipal-Windows.zip -Force
+
+      # ==========================
+      # Upload Windows Artifact
+      # ==========================
+      - name: Upload Windows Artifact
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Simplipal-Windows
+          path: Simplipal-Windows.zip
