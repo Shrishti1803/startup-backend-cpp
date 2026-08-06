@@ -31,13 +31,8 @@ jobs:
         run: |
           cmake -B build `
             -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake" `
-            -DVCPKG_TARGET_TRIPLET=x64-windows-static `
+            -DVCPKG_TARGET_TRIPLET=x64-windows `
             -DVCPKG_FEATURE_FLAGS=manifests
-
-      - name: Inspect JDBC headers
-        shell: powershell
-        run: |
-          dir "${{ github.workspace }}\build\vcpkg_installed\x64-windows-static\include\jdbc" -Recurse
 
       - name: Build
         run: |
