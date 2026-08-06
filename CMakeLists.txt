@@ -29,19 +29,17 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
     ${PROJECT_SOURCE_DIR}/src/*.cpp
 )
 
+# ---------- MSVC Runtime ----------
+if(MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY
+        "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
 # ---------- Executable ----------
 add_executable(app ${SOURCES})
 
-# ==========================================================
-#                    WINDOWS (vcpkg)
-# ==========================================================
+# WINDOWS
 if(WIN32)
-
-    # Match x64-windows-static
-    if(MSVC)
-        set(CMAKE_MSVC_RUNTIME_LIBRARY
-            "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    endif()
 
     find_package(fmt CONFIG REQUIRED)
     find_package(spdlog CONFIG REQUIRED)
