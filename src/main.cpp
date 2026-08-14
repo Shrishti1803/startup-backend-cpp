@@ -9,25 +9,10 @@
 #include <windows.h>
 #endif
 
-#ifdef _WIN32
-void maximizeConsoleWindow()
-{
-    HWND consoleWindow =
-        GetConsoleWindow();
-
-    ShowWindow(
-        consoleWindow,
-        SW_MAXIMIZE
-    );
-}
-#endif
+#
 
 int main()
 {
-#ifdef _WIN32
-    maximizeConsoleWindow();
-#endif
-
     try
     {
         Logger::init();

@@ -12,10 +12,53 @@
 #include <iostream>
 #include <stdexcept>
 
+#include <fstream>
+#include <unordered_map>
+#include <string>
+
 // THIS file has all the necessary functions to establish the DB connection
 // ONLY THIS FILE WILL GIVE YOU THE ACCESS TO THE DB
 // DO NOT DARE TO ASK FOR SEPARATE CONNECTIONS WHEN I HAVE LITERALLY MADE THESE HELPER FUNCTIONS
 // THIS IS THE SOUL OF THE DB CONNECTION DO NOT WASTE IT OR TAKE IT FOR GRANTED
+
+static std::unordered_map<std::string, std::string>
+loadDbConfig(const std::string& path)
+{
+    std::unordered_map<std::string, std::string> config;
+
+    std::ifstream file(path);
+
+    if (!file)
+    {
+        throw std::runtime_error(
+            "Unable to open database configuration file: " + path
+        );
+    }
+
+    std::string line;
+
+    while (std::getline(file, line))
+    {
+        if (line.empty() || line[0] == '#')
+        {
+            continue;
+        }
+
+        const std::size_t delimiter = line.find('=');
+
+        if (delimiter == std::string::npos)
+        {
+            continue;
+        }
+
+        const std::string key = line.substr(0, delimiter);
+        const std::string value = line.substr(delimiter + 1);
+
+        config[key] = value;
+    }
+
+    return config;
+}
 
 bool DbManager::connect()
 {
@@ -23,15 +66,23 @@ bool DbManager::connect()
 
     try
     {
+        const auto config = loadDbConfig("config/db.conf");
+
+        const std::string host = config.at("host");
+        const std::string port = config.at("port");
+        const std::string user = config.at("user");
+        const std::string password = config.at("password");
+        const std::string database = config.at("database");
+
         sql::Driver* driver = get_driver_instance();
 
         conn = driver->connect(
-            "Db Host server",
-            "root",
-            "Db Password"
+            "tcp://" + host + ":" + port,
+            user,
+            password
         );
 
-        conn->setSchema("Database name");
+        conn->setSchema(database);
 
         if (db_logger)
         {
