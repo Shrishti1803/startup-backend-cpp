@@ -50,7 +50,7 @@ public:
         const Auth::Session& session,
         const std::string& brandName = "",
         const std::string& creatorName = "",
-        const std::string& sortBy = "date",
+        const std::string& sortBy = "lead_date",
         const std::string& sortOrder = "DESC",
         int page = 1,
         int limit = 10

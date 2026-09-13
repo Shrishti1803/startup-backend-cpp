@@ -20,13 +20,18 @@ struct Deal {
     bool post_uploaded;
     bool payment_cleared;
 
-    std::string date;
+    std::string lead_date;
+    std::string connected_date;
+    std::string deal_done_date;
+    std::string post_uploaded_date;
+    std::string payment_cleared_date;
     bool is_deleted;
 };
 
 
 //PATCH struct (only fields to update)
 struct DealUpdate {
+
     std::optional<int> brand_id;
     std::optional<int> creator_id;
 
@@ -36,7 +41,11 @@ struct DealUpdate {
     std::optional<bool> post_uploaded;
     std::optional<bool> payment_cleared;
 
-    std::optional<std::string> date;
+    std::optional<std::string> lead_date;
+    std::optional<std::string> connected_date;
+    std::optional<std::string> deal_done_date;
+    std::optional<std::string> post_uploaded_date;
+    std::optional<std::string> payment_cleared_date;
 };
 
 class DealRepository {

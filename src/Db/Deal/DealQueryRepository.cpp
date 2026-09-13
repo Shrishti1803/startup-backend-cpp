@@ -18,7 +18,8 @@ std::vector<DealView> DealQueryRepository::filterDeals(
 
     std::string query =
         "SELECT d.deal_id, b.brand_name AS brand_name, c.creator_name AS creator_name, "
-        "d.is_lead, d.is_connected, d.is_deal_done, d.post_uploaded, d.payment_cleared, d.date "
+        "d.is_lead, d.is_connected, d.is_deal_done, d.post_uploaded, d.payment_cleared, "
+        "d.lead_date, d.connected_date, d.deal_done_date, d.post_uploaded_date, d.payment_cleared_date "
         "FROM DEAL d "
         "LEFT JOIN BRAND b ON d.brand_id = b.brand_id "
         "LEFT JOIN CREATOR c ON d.creator_id = c.creator_id "
@@ -62,7 +63,11 @@ std::vector<DealView> DealQueryRepository::filterDeals(
         dv.post_uploaded = res->getBoolean("post_uploaded");
         dv.payment_cleared = res->getBoolean("payment_cleared");
 
-        dv.date = res->getString("date");
+        dv.lead_date = res->getString("lead_date");
+        dv.connected_date = res->getString("connected_date");
+        dv.deal_done_date = res->getString("deal_done_date");
+        dv.post_uploaded_date = res->getString("post_uploaded_date");
+        dv.payment_cleared_date = res->getString("payment_cleared_date");
 
         results.push_back(dv);
     }
@@ -85,7 +90,8 @@ std::vector<DealView> DealQueryRepository::getDeals(
 
     std::string query =
         "SELECT d.deal_id, b.brand_name AS brand_name, c.creator_name AS creator_name, "
-        "d.is_lead, d.is_connected, d.is_deal_done, d.post_uploaded, d.payment_cleared, d.date "
+        "d.is_lead, d.is_connected, d.is_deal_done, d.post_uploaded, d.payment_cleared, "
+        "d.lead_date, d.connected_date, d.deal_done_date, d.post_uploaded_date, d.payment_cleared_date "
         "FROM DEAL d "
         "LEFT JOIN BRAND b ON d.brand_id = b.brand_id "
         "LEFT JOIN CREATOR c ON d.creator_id = c.creator_id "
@@ -96,7 +102,7 @@ std::vector<DealView> DealQueryRepository::getDeals(
     if (!creatorName.empty()) query += "AND c.creator_name LIKE ? ";
 
     // Sorting (SAFE)
-    std::string orderBy = "d.date";
+    std::string orderBy = "d.lead_date";
 
     if (sortBy == "brand_name") orderBy = "b.brand_name";
     else if (sortBy == "creator_name") orderBy = "c.creator_name";
@@ -138,13 +144,18 @@ std::vector<DealView> DealQueryRepository::getDeals(
         dv.post_uploaded = res->getBoolean("post_uploaded");
         dv.payment_cleared = res->getBoolean("payment_cleared");
 
-        dv.date = res->getString("date");
+        dv.lead_date = res->getString("lead_date");
+        dv.connected_date = res->getString("connected_date");
+        dv.deal_done_date = res->getString("deal_done_date");
+        dv.post_uploaded_date = res->getString("post_uploaded_date");
+        dv.payment_cleared_date = res->getString("payment_cleared_date");
 
         results.push_back(dv);
     }
 
     return results;
 }
+
 
 int DealQueryRepository::getDealCount(
     sql::Connection* conn,
