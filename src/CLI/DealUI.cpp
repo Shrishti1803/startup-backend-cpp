@@ -95,7 +95,7 @@ void DealUI::showDeals()
         << std::setw(10) << "ID"
         << std::setw(25) << "Brand"
         << std::setw(25) << "Creator"
-        << std::setw(15) << "Date"
+        << std::setw(15) << "Lead Date"
         << "\n";
 
     std::cout
@@ -108,7 +108,7 @@ void DealUI::showDeals()
             << std::setw(10) << deal.deal_id
             << std::setw(25) << deal.brand_name
             << std::setw(25) << deal.creator_name
-            << std::setw(15) << deal.date
+            << std::setw(15) << deal.lead_date
             << "\n";
     }
 }
@@ -183,14 +183,14 @@ void DealUI::createDeal()
     deal.payment_cleared = false;
     deal.is_deleted = false;
 
-    std::cout << "Enter date (YYYY-MM-DD): ";
+    std::cout << "Enter lead date (YYYY-MM-DD): ";
 
     std::getline(std::cin, input);
 
     try
     {
         Date::fromString(input);
-        deal.date = input;
+        deal.lead_date = input;
     }
     catch(const std::exception& e)
     {
@@ -326,13 +326,16 @@ void DealUI::updateDealField(int dealId)
     clearScreen();
 
     std::cout << "\n===== UPDATE DEAL =====\n";
-
     std::cout << "1. Lead\n";
     std::cout << "2. Connected\n";
     std::cout << "3. Deal Done\n";
     std::cout << "4. Post Uploaded\n";
     std::cout << "5. Payment Cleared\n";
-    std::cout << "6. Date\n";
+    std::cout << "6. Lead Date\n";
+    std::cout << "7. Connected Date\n";
+    std::cout << "8. Deal Done Date\n";
+    std::cout << "9. Post Uploaded Date\n";
+    std::cout << "10. Payment Cleared Date\n";
     std::cout << "0. Back\n";
 
     std::cout << "Enter choice: ";
@@ -383,12 +386,13 @@ void DealUI::updateDealField(int dealId)
                 break;
 
             case 6:
-                std::cout << "Enter date (YYYY-MM-DD): ";
+                std::cout << "Enter lead date (YYYY-MM-DD): ";
                 std::getline(std::cin, input);
+
                 try
                 {
                     Date::fromString(input);
-                    updateData.date = input;
+                    updateData.lead_date = input;
                 }
                 catch(const std::exception& e)
                 {
@@ -396,7 +400,81 @@ void DealUI::updateDealField(int dealId)
                     pause();
                     return;
                 }
+
                 break;
+
+            case 7:
+                std::cout << "Enter connected date (YYYY-MM-DD): ";
+                std::getline(std::cin, input);
+
+                try
+                {
+                    Date::fromString(input);
+                    updateData.connected_date = input;
+                }
+                catch(const std::exception& e)
+                {
+                    UI::error(e.what());
+                    pause();
+                    return;
+                }
+
+                break;
+
+            case 8:
+                std::cout << "Enter deal done date (YYYY-MM-DD): ";
+                std::getline(std::cin, input);
+
+                try
+                {
+                    Date::fromString(input);
+                    updateData.deal_done_date = input;
+                }
+                catch(const std::exception& e)
+                {
+                    UI::error(e.what());
+                    pause();
+                    return;
+                }
+
+                break;
+
+            case 9:
+                std::cout << "Enter post uploaded date (YYYY-MM-DD): ";
+                std::getline(std::cin, input);
+
+                try
+                {
+                    Date::fromString(input);
+                    updateData.post_uploaded_date = input;
+                }
+                catch(const std::exception& e)
+                {
+                    UI::error(e.what());
+                    pause();
+                    return;
+                }
+
+                break;
+
+            case 10:
+                std::cout << "Enter payment cleared date (YYYY-MM-DD): ";
+                std::getline(std::cin, input);
+
+                try
+                {
+                    Date::fromString(input);
+                    updateData.payment_cleared_date = input;
+                }
+                catch(const std::exception& e)
+                {
+                    UI::error(e.what());
+                    pause();
+                    return;
+                }
+
+                break;
+
 
             default:
                 UI::error("Invalid choice.");
@@ -459,8 +537,28 @@ void DealUI::renderDealDetails(const DealView& deal)
         << " Payment Cleared\n";
 
     std::cout
-        << "\nDate : "
-        << deal.date
+        << "\nLead Date : "
+        << deal.lead_date
+        << "\n";
+
+    std::cout
+        << "Connected Date : "
+        << deal.connected_date
+        << "\n";
+
+    std::cout
+        << "Deal Done Date : "
+        << deal.deal_done_date
+        << "\n";
+
+    std::cout
+        << "Post Uploaded Date : "
+        << deal.post_uploaded_date
+        << "\n";
+
+    std::cout
+        << "Payment Cleared Date : "
+        << deal.payment_cleared_date
         << "\n";
 }
 

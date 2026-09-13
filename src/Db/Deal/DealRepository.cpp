@@ -11,8 +11,8 @@ int DealRepository::create(sql::Connection* conn, const Deal& d) {
 
     std::string query =
         "INSERT INTO DEAL "
-        "(brand_id, creator_id, is_lead, is_connected, is_deal_done, post_uploaded, payment_cleared, date) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        "(brand_id, creator_id, is_lead, is_connected, is_deal_done, post_uploaded, payment_cleared, lead_date, connected_date, deal_done_date, post_uploaded_date, payment_cleared_date) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     std::unique_ptr<sql::PreparedStatement> pstmt(
         conn->prepareStatement(query)
@@ -25,8 +25,11 @@ int DealRepository::create(sql::Connection* conn, const Deal& d) {
     pstmt->setBoolean(5, d.is_deal_done);
     pstmt->setBoolean(6, d.post_uploaded);
     pstmt->setBoolean(7, d.payment_cleared);
-    pstmt->setString(8, d.date);
-
+    pstmt->setString(8, d.lead_date);
+    pstmt->setString(9, d.connected_date);
+    pstmt->setString(10, d.deal_done_date);
+    pstmt->setString(11, d.post_uploaded_date);
+    pstmt->setString(12, d.payment_cleared_date);
     pstmt->executeUpdate();
 
     std::unique_ptr<sql::ResultSet> res(
@@ -67,7 +70,12 @@ Deal DealRepository::getById(sql::Connection* conn, int deal_id) {
     d.post_uploaded = res->getBoolean("post_uploaded");
     d.payment_cleared = res->getBoolean("payment_cleared");
 
-    d.date = res->getString("date");
+    d.lead_date = res->getString("lead_date");
+    d.connected_date = res->getString("connected_date");
+    d.deal_done_date = res->getString("deal_done_date");
+    d.post_uploaded_date = res->getString("post_uploaded_date");
+    d.payment_cleared_date = res->getString("payment_cleared_date");
+
     d.is_deleted = res->getBoolean("is_deleted");
 
     return d;
@@ -99,7 +107,12 @@ std::vector<Deal> DealRepository::getByBrandId(sql::Connection* conn, int brand_
         d.post_uploaded = res->getBoolean("post_uploaded");
         d.payment_cleared = res->getBoolean("payment_cleared");
 
-        d.date = res->getString("date");
+        d.lead_date = res->getString("lead_date");
+        d.connected_date = res->getString("connected_date");
+        d.deal_done_date = res->getString("deal_done_date");
+        d.post_uploaded_date = res->getString("post_uploaded_date");
+        d.payment_cleared_date = res->getString("payment_cleared_date");
+
         d.is_deleted = res->getBoolean("is_deleted");
 
         results.push_back(d);
@@ -134,8 +147,11 @@ std::vector<Deal> DealRepository::getByCreatorId(sql::Connection* conn, int crea
         d.post_uploaded = res->getBoolean("post_uploaded");
         d.payment_cleared = res->getBoolean("payment_cleared");
 
-        d.date = res->getString("date");
-        d.is_deleted = res->getBoolean("is_deleted");
+        d.lead_date = res->getString("lead_date");
+        d.connected_date = res->getString("connected_date");
+        d.deal_done_date = res->getString("deal_done_date");
+        d.post_uploaded_date = res->getString("post_uploaded_date");
+        d.payment_cleared_date = res->getString("payment_cleared_date");        d.is_deleted = res->getBoolean("is_deleted");
 
         results.push_back(d);
     }
@@ -160,7 +176,11 @@ void DealRepository::update(
     if (u.is_deal_done.has_value()) fields.push_back("is_deal_done = ?");
     if (u.post_uploaded.has_value()) fields.push_back("post_uploaded = ?");
     if (u.payment_cleared.has_value()) fields.push_back("payment_cleared = ?");
-    if (u.date.has_value()) fields.push_back("date = ?");
+    if (u.lead_date.has_value()) fields.push_back("lead_date = ?");
+    if (u.connected_date.has_value()) fields.push_back("connected_date = ?");
+    if (u.deal_done_date.has_value()) fields.push_back("deal_done_date = ?");
+    if (u.post_uploaded_date.has_value()) fields.push_back("post_uploaded_date = ?");
+    if (u.payment_cleared_date.has_value()) fields.push_back("payment_cleared_date = ?");
 
     if (fields.empty()) return;
 
@@ -184,7 +204,11 @@ void DealRepository::update(
     if (u.is_deal_done.has_value()) pstmt->setBoolean(index++, *u.is_deal_done);
     if (u.post_uploaded.has_value()) pstmt->setBoolean(index++, *u.post_uploaded);
     if (u.payment_cleared.has_value()) pstmt->setBoolean(index++, *u.payment_cleared);
-    if (u.date.has_value()) pstmt->setString(index++, *u.date);
+    if (u.lead_date.has_value()) pstmt->setString(index++, *u.lead_date);
+    if (u.connected_date.has_value()) pstmt->setString(index++, *u.connected_date);
+    if (u.deal_done_date.has_value()) pstmt->setString(index++, *u.deal_done_date);
+    if (u.post_uploaded_date.has_value()) pstmt->setString(index++, *u.post_uploaded_date);
+    if (u.payment_cleared_date.has_value()) pstmt->setString(index++, *u.payment_cleared_date);
 
     pstmt->setInt(index++, deal_id);
 
@@ -212,7 +236,8 @@ std::vector<DealView> DealRepository::getDealsWithNames(sql::Connection* conn) {
 
     std::string query =
         "SELECT d.deal_id, b.brand_name AS brand_name, c.creator_name AS creator_name, "
-        "d.is_lead, d.is_connected, d.is_deal_done, d.post_uploaded, d.payment_cleared, d.date "
+        "d.is_lead, d.is_connected, d.is_deal_done, d.post_uploaded, d.payment_cleared, "
+        "d.lead_date, d.connected_date, d.deal_done_date, d.post_uploaded_date, d.payment_cleared_date "
         "FROM DEAL d "
         "LEFT JOIN BRAND b ON d.brand_id = b.brand_id "
         "LEFT JOIN CREATOR c ON d.creator_id = c.creator_id "
@@ -237,7 +262,11 @@ std::vector<DealView> DealRepository::getDealsWithNames(sql::Connection* conn) {
         dv.post_uploaded = res->getBoolean("post_uploaded");
         dv.payment_cleared = res->getBoolean("payment_cleared");
 
-        dv.date = res->getString("date");
+        dv.lead_date = res->getString("lead_date");
+        dv.connected_date = res->getString("connected_date");
+        dv.deal_done_date = res->getString("deal_done_date");
+        dv.post_uploaded_date = res->getString("post_uploaded_date");
+        dv.payment_cleared_date = res->getString("payment_cleared_date");
 
         results.push_back(dv);
     }
